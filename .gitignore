@@ -1,4 +1,6 @@
 # gitignore file
+.*
+!.gitignore
 *.iml
 *.zip
 *.class

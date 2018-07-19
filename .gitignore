@@ -1,0 +1,13 @@
+# gitignore file
+*.iml
+*.zip
+*.class
+*~
+*.csv
+*.txt
+*.tsv
+.idea/
+out/
+target/
+cmake-build-debug/
+.ipynb_checkpoints/

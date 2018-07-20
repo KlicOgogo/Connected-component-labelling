@@ -4,7 +4,7 @@
 class Point {
 public:
     Point() = default;
-    Point(int x, int y): x_(x), y_(y_) {}
+    Point(int x, int y): x_(x), y_(y) {}
     Point(const Point &p) = default;
     Point& operator=(const Point &p) {
         x_ = p.x();
@@ -73,7 +73,7 @@ public:
     void set_border(const Rectangle &border) {
         border_ = border;
     }
-    void set_number(const int &number) {
+    void set_number(int number) {
         number_ = number;
     }
 private:

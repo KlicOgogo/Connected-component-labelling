@@ -61,7 +61,7 @@ private:
 class ComponentData {
 public:
     ComponentData() = default;
-    ComponentData(Rectangle border, int number): border_(border),
+    ComponentData(Rectangle border, char number): border_(border),
                                                  number_(number) {}
 
     Rectangle border() const {
@@ -73,12 +73,12 @@ public:
     void set_border(const Rectangle &border) {
         border_ = border;
     }
-    void set_number(int number) {
+    void set_number(char number) {
         number_ = number;
     }
 private:
     Rectangle border_;
-    int number_;
+    char number_;
 };
 
 

@@ -22,7 +22,7 @@ private:
     int x_, y_;
 };
 
-struct Rectangle {
+class Rectangle {
 public:
     Rectangle() = default;
     Rectangle(const Point &left_top,
@@ -33,7 +33,7 @@ private:
     Point left_top_, right_bottom_;
 };
 
-struct ComponentData {
+class ComponentData {
 public:
     ComponentData() = default;
     ComponentData(Rectangle border, int number): border_(border),

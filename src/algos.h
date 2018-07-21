@@ -8,7 +8,7 @@
 
 void one_component_at_a_time(cv::Mat &image,
                              std::deque<ComponentData> &data,
-                             int connectivity = 4) {
+                             int connectivity = 8) {
     data.clear();
     auto m = image.size().height;
     auto n = image.size().width;

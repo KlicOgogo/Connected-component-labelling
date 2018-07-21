@@ -6,11 +6,11 @@
 
 class ComponentData {
 public:
-    cv::Rect2i border_;
-    uchar number_{};
+    cv::Rect2i border;
+    uchar number{};
     ComponentData() = default;
     ComponentData(const ComponentData &data) = default;
-    ComponentData(cv::Rect2i border, uchar number): border_(std::move(border)), number_(number) {}
+    ComponentData(cv::Rect2i border_, uchar number_): border(std::move(border_)), number(number_) {}
 };
 
 #endif //SRC_COMPONENT_DATA_H

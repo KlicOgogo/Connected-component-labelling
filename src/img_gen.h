@@ -8,7 +8,7 @@ constexpr int HEIGHT = 1024, WIDTH = 576;
 constexpr int HEIGHT_SM = 205, WIDTH_SM = 144;
 
 
-cv::Mat generate_image(double p=0.5) {
+cv::Mat generate(double p = 0.5) {
     cv::Mat result(HEIGHT, WIDTH, CV_8UC1);
     std::random_device device;
     std::default_random_engine gen(device());

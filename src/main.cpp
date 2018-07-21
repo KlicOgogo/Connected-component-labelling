@@ -9,7 +9,7 @@ int main() {
     std::vector<std::vector<char>> data;
     cv::Mat chmo(10, 10, CV_8UC1);
     data.reserve(100);
-    auto im = generate_image(0.5);
+    auto im = generate(0.5);
     std::string str;
     int i = 0;
     while(test_image >> str) {

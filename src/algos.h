@@ -24,8 +24,8 @@ inline void update_last_component(cv::Mat &image, std::deque<ComponentData> &dat
         return;
     }
     data.back().number = 1;
-    for (int i = 0; i < m; ++i) {
-        for (int j = 0; j < n; ++j) {
+    for (int i = data.back().border.y; i < data.back().border.y + data.back().border.height; ++i) {
+        for (int j = data.back().border.x; j < data.back().border.x + data.back().border.width; ++j) {
             if (image.at<uchar>(i, j) == cur_number) {
                 image.at<uchar>(i, j) = 1;
             }
@@ -84,7 +84,7 @@ void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
                         cur_data.border.x = temp_x;
                         ++cur_data.border.width;
                     }
-                    if (temp_y > cur_data.border.y + cur_data.border.height) {
+                    if (temp_y > cur_data.border.y + cur_data.border.height - 1) {
                         ++cur_data.border.height;
                     }
                 }
@@ -94,7 +94,7 @@ void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
                 if (image.at<uchar>(top.y, temp_x) == 1) {
                     q.push(cv::Point2i(temp_x, top.y));
                     image.at<uchar>(top.y, temp_x) = cur_number;
-                    if (temp_x > cur_data.border.x + cur_data.border.width) {
+                    if (temp_x > cur_data.border.x + cur_data.border.width - 1) {
                         ++cur_data.border.width;
                     }
                 }
@@ -102,7 +102,7 @@ void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
                     auto temp_y = top.y - 1;
                     q.push(cv::Point2i(temp_x, temp_y));
                     image.at<uchar>(temp_y, temp_x) = cur_number;
-                    if (temp_x > cur_data.border.x + cur_data.border.width) {
+                    if (temp_x > cur_data.border.x + cur_data.border.width - 1) {
                         ++cur_data.border.width;
                     }
                     if (temp_y < cur_data.border.y) {
@@ -114,10 +114,10 @@ void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
                     auto temp_y = top.y + 1;
                     q.push(cv::Point2i(temp_x, temp_y));
                     image.at<uchar>(temp_y, temp_x) = cur_number;
-                    if (temp_x > cur_data.border.x + cur_data.border.width) {
+                    if (temp_x > cur_data.border.x + cur_data.border.width - 1) {
                         ++cur_data.border.width;
                     }
-                    if (temp_y > cur_data.border.y + cur_data.border.height) {
+                    if (temp_y > cur_data.border.y + cur_data.border.height - 1) {
                         ++cur_data.border.height;
                     }
                 }
@@ -135,7 +135,7 @@ void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
                 auto temp = top.y + 1;
                 q.push(cv::Point2i(top.x, temp));
                 image.at<uchar>(temp, top.x) = cur_number;
-                if (temp > cur_data.border.y + cur_data.border.height) {
+                if (temp > cur_data.border.y + cur_data.border.height - 1) {
                     ++cur_data.border.height;
                 }
             }
@@ -179,7 +179,7 @@ void one_component_at_a_time4(cv::Mat &image,
                 auto temp = top.x + 1;
                 q.push(cv::Point2i(temp, top.y));
                 image.at<uchar>(top.y, temp) = cur_number;
-                if (temp > cur_data.border.x + cur_data.border.width) {
+                if (temp > cur_data.border.x + cur_data.border.width - 1) {
                     ++cur_data.border.width;
                 }
             }
@@ -196,7 +196,7 @@ void one_component_at_a_time4(cv::Mat &image,
                 auto temp = top.y + 1;
                 q.push(cv::Point2i(top.x, temp));
                 image.at<uchar>(temp, top.x) = cur_number;
-                if (temp > cur_data.border.y + cur_data.border.height) {
+                if (temp > cur_data.border.y + cur_data.border.height - 1) {
                     ++cur_data.border.height;
                 }
             }

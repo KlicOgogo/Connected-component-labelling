@@ -6,7 +6,18 @@
 
 constexpr int HEIGHT = 1024, WIDTH = 576;
 constexpr int HEIGHT_SM = 205, WIDTH_SM = 144;
+//constexpr int HEIGHT = 576, WIDTH = 1024;
+//constexpr int HEIGHT_SM = 115, WIDTH_SM = 256;
 
+cv::Mat generate_ones() {
+    cv::Mat result(HEIGHT, WIDTH, CV_8UC1);
+    for (int i = 0; i < HEIGHT; ++i) {
+        for (int j = 0; j < WIDTH; ++j) {
+            result.at<uchar>(i, j) = 1;
+        }
+    }
+    return result;
+}
 
 cv::Mat generate(double p = 0.5) {
     cv::Mat result(HEIGHT, WIDTH, CV_8UC1);

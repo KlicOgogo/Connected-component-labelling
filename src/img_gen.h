@@ -4,12 +4,12 @@
 #include <opencv2/opencv.hpp>
 #include <random>
 
-constexpr int height = 1024, width = 576;
-constexpr int height_sm = 205, width_sm = 144;
+constexpr int HEIGHT = 1024, WIDTH = 576;
+constexpr int HEIGHT_SM = 205, WIDTH_SM = 144;
 
 
 cv::Mat generate_image(double p=0.5) {
-    cv::Mat result(height, width, CV_8UC1);
+    cv::Mat result(HEIGHT, WIDTH, CV_8UC1);
     std::random_device device;
     std::default_random_engine gen(device());
     std::uniform_real_distribution<double> distr(0.0, 1.0);
@@ -18,7 +18,7 @@ cv::Mat generate_image(double p=0.5) {
         int up = 0;
         for (int j = 0; j < 4; ++j) {
             if (distr(gen) > p) {
-                up += width_sm;
+                up += WIDTH_SM;
                 continue;
             }
             int comp_width = 61 + static_cast<int>(41 * distr(gen));
@@ -28,9 +28,9 @@ cv::Mat generate_image(double p=0.5) {
                     result.at<uchar>(k, l) = 1;
                 }
             }
-            up += width_sm;
+            up += WIDTH_SM;
         }
-        left += height_sm;
+        left += HEIGHT_SM;
     }
     return result;
 }

@@ -3,13 +3,11 @@
 
 int main() {
     /*
-    std::chrono::milliseconds a(10), b(100), c(1000);
-    std::cout << ((a + b) + c).count() << '\n';
     std::ifstream test_image("test.txt");
     std::vector<std::vector<char>> data;
-    cv::Mat chmo(10, 10, CV_8UC1);
+    cv::Mat imm(10, 10, CV_8UC1);
     data.reserve(100);
-    auto im = generate(0.5);
+    auto im = gen::square_comp_rand_size(0.5);
     std::string str;
     int i = 0;
     while(test_image >> str) {
@@ -17,7 +15,7 @@ int main() {
         data.back().resize(str.size());
         for (int j = 0; j < str.size(); ++j) {
             data[i][j] = str[j] - '0';
-            chmo.at<uchar>(i, j) = static_cast<uchar>(data[i][j]);
+            imm.at<uchar>(i, j) = static_cast<uchar>(data[i][j]);
         }
         ++i;
     }
@@ -37,4 +35,5 @@ int main() {
     bmark::test(1, 4);
     bmark::test(2, 4);
     bmark::test(3, 4);
+    return 0;
 }

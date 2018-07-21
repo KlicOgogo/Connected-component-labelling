@@ -3,8 +3,8 @@
 #include <cstdint>
 #include "component_data.h"
 
-#ifndef SRC_ALGOS_H
-#define SRC_ALGOS_H
+#ifndef SRC_ONE_COMPONENT_AT_A_TIME_H
+#define SRC_ONE_COMPONENT_AT_A_TIME_H
 
 
 inline void find_unlabeled_component(cv::Mat &image, cv::Point2i &comp_start, const int &m, const int &n) {
@@ -218,4 +218,4 @@ void one_component_at_a_time(cv::Mat &image,
     }
 }
 
-#endif //SRC_ALGOS_H
+#endif //SRC_ONE_COMPONENT_AT_A_TIME_H

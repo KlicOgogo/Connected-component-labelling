@@ -13,6 +13,8 @@ cv::Mat generate_image(double p=0.5) {
     std::random_device device;
     std::default_random_engine gen(device());
     std::uniform_real_distribution<double> distr(0.0, 1.0);
+    auto width_lb = static_cast<int>(static_cast<double>(WIDTH_SM) / std::sqrt(2)) - 40;
+    auto height_lb = static_cast<int>(static_cast<double>(HEIGHT_SM) / std::sqrt(2)) - 40;
     int left = 0;
     for (int i = 0; i < 5; ++i) {
         int up = 0;
@@ -21,8 +23,8 @@ cv::Mat generate_image(double p=0.5) {
                 up += WIDTH_SM;
                 continue;
             }
-            int comp_width = 61 + static_cast<int>(41 * distr(gen));
-            int comp_height = 104 + static_cast<int>(41 * distr(gen));
+            int comp_width = width_lb + static_cast<int>(41 * distr(gen));
+            int comp_height = height_lb + static_cast<int>(41 * distr(gen));
             for (int k = left; k < left + comp_height; ++k) {
                 for (int l = up; l < up + comp_width; ++l) {
                     result.at<uchar>(k, l) = 1;

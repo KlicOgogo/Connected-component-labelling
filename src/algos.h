@@ -57,37 +57,41 @@ void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
             cur_data.border.y = std::min(cur_data.border.y, top.y);
             cur_data.border.width = std::max(cur_data.border.width, top.x - cur_data.border.x);
             cur_data.border.height = std::max(cur_data.border.height, top.y - cur_data.border.y);
+            if (top.x > 0) {
+                if (image.at<uchar>(top.y, top.x - 1) == 1) {
+                    q.push(cv::Point2i(top.x - 1, top.y));
+                    image.at<uchar>(top.y, top.x - 1) = cur_number;
+                }
+                if (top.y > 0 && image.at<uchar>(top.y - 1, top.x - 1) == 1) {
+                    q.push(cv::Point2i(top.x - 1, top.y - 1));
+                    image.at<uchar>(top.y - 1, top.x - 1) = cur_number;
+                }
+                if (top.y < m - 1 && image.at<uchar>(top.y + 1, top.x - 1) == 1) {
+                    q.push(cv::Point2i(top.x - 1, top.y + 1));
+                    image.at<uchar>(top.y + 1, top.x - 1) = cur_number;
+                }
+            }
+            if (top.x < n - 1) {
+                if (image.at<uchar>(top.y, top.x + 1) == 1) {
+                    q.push(cv::Point2i(top.x + 1, top.y));
+                    image.at<uchar>(top.y, top.x + 1) = cur_number;
+                }
+                if (top.y > 0 && image.at<uchar>(top.y - 1, top.x + 1) == 1) {
+                    q.push(cv::Point2i(top.x + 1, top.y - 1));
+                    image.at<uchar>(top.y - 1, top.x + 1) = cur_number;
+                }
+                if (top.y < m - 1 && image.at<uchar>(top.y + 1, top.x + 1) == 1) {
+                    q.push(cv::Point2i(top.x + 1, top.y + 1));
+                    image.at<uchar>(top.y + 1, top.x + 1) = cur_number;
+                }
+            }
             if (top.y > 0 && image.at<uchar>(top.y - 1, top.x) == 1) {
                 q.push(cv::Point2i(top.x, top.y - 1));
                 image.at<uchar>(top.y - 1, top.x) = cur_number;
             }
-            if (top.x > 0 && image.at<uchar>(top.y, top.x - 1) == 1) {
-                q.push(cv::Point2i(top.x - 1, top.y));
-                image.at<uchar>(top.y, top.x - 1) = cur_number;
-            }
             if (top.y < m - 1 && image.at<uchar>(top.y + 1, top.x) == 1) {
                 q.push(cv::Point2i(top.x, top.y + 1));
                 image.at<uchar>(top.y + 1, top.x) = cur_number;
-            }
-            if (top.x < n - 1 && image.at<uchar>(top.y, top.x + 1) == 1) {
-                q.push(cv::Point2i(top.x + 1, top.y));
-                image.at<uchar>(top.y, top.x + 1) = cur_number;
-            }
-            if (top.y > 0 && top.x > 0 && image.at<uchar>(top.y - 1, top.x - 1) == 1) {
-                q.push(cv::Point2i(top.x - 1, top.y - 1));
-                image.at<uchar>(top.y - 1, top.x - 1) = cur_number;
-            }
-            if (top.x > 0 && top.y < m - 1 && image.at<uchar>(top.y + 1, top.x - 1) == 1) {
-                q.push(cv::Point2i(top.x - 1, top.y + 1));
-                image.at<uchar>(top.y + 1, top.x - 1) = cur_number;
-            }
-            if (top.y < m - 1 && top.x < n - 1 && image.at<uchar>(top.y + 1, top.x + 1) == 1) {
-                q.push(cv::Point2i(top.x + 1, top.y + 1));
-                image.at<uchar>(top.y + 1, top.x + 1) = cur_number;
-            }
-            if (top.x < n - 1 && top.y > 0 && image.at<uchar>(top.y - 1, top.x + 1) == 1) {
-                q.push(cv::Point2i(top.x + 1, top.y - 1));
-                image.at<uchar>(top.y - 1, top.x + 1) = cur_number;
             }
         }
         data.emplace_back(cur_data);

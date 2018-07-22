@@ -15,67 +15,71 @@ inline void push_and_update(cv::Mat &image, std::queue<int> &q,
     image.at<uchar>(p) = value;
 }
 
-inline void push_and_update_left(cv::Mat &image, std::queue<int> &q,
-                                 ComponentData &data, const int &p, const uchar &value) {
+inline void push_and_update(cv::Mat &image, std::queue<cv::Point2i> &q,
+                            const cv::Point &p, const uchar &value) {
+    q.push(p);
+    image.at<uchar>(p.x) = value;
+}
+
+inline void push_and_update_left(cv::Mat &image, std::queue<cv::Point2i> &q,
+                                 ComponentData &data, const cv::Point &p, const uchar &value) {
     push_and_update(image, q, p, value);
-    int l = p % image.size().width;
-    if (l < data.left) {
-        data.left = l;
+    if (p.y < data.left) {
+        data.left = p.y;
     }
 }
 
-inline void push_and_update_right(cv::Mat &image, std::queue<int> &q,
-                                  ComponentData &data, const int &p, const uchar &value) {
+inline void push_and_update_right(cv::Mat &image, std::queue<cv::Point2i> &q,
+                                  ComponentData &data, const cv::Point2i &p, const uchar &value) {
     push_and_update(image, q, p, value);
-    int l = p % image.size().width;
-    if (l > data.right) {
-        data.right = l;
+    if (p.y > data.right) {
+        data.right = p.y;
     }
 
 }
 
-inline void push_and_update_up(cv::Mat &image, std::queue<int> &q,
-                               ComponentData &data, const int &p, const uchar &value) {
+inline void push_and_update_up(cv::Mat &image, std::queue<cv::Point2i> &q,
+                               ComponentData &data, const cv::Point2i &p, const uchar &value) {
     push_and_update(image, q, p, value);
-    if (p < data.top) {
-        data.top = p;
+    if (p.x < data.top) {
+        data.top = p.x;
     }
 }
 
-inline void push_and_update_down(cv::Mat &image, std::queue<int> &q,
-                                 ComponentData &data, const int &p, const uchar &value) {
+inline void push_and_update_down(cv::Mat &image, std::queue<cv::Point2i> &q,
+                                 ComponentData &data, const cv::Point2i &p, const uchar &value) {
     push_and_update(image, q, p, value);
-    if (p > data.bottom) {
-        data.bottom = p;
+    if (p.x > data.bottom) {
+        data.bottom = p.x;
     }
 }
 
-inline void bfs_step4(cv::Mat &image, std::queue<int> &q,
+inline void bfs_step4(cv::Mat &image, std::queue<cv::Point2i> &q,
                       ComponentData &data, const uchar &value, const int &out) {
-    int top = q.front();
+    auto top = q.front();
     q.pop();
-    if (top - image.size().width > -1) {
-        if (image.at<uchar>(top - image.size().width) == 1) {
-            push_and_update_up(image, q, data, top - image.size().width, value);
+    if (top.x > image.size().width - 1) {
+        if (image.at<uchar>(top.x - image.size().width) == 1) {
+            push_and_update_up(image, q, data, cv::Point2i(top.x - image.size().width, top.y), value);
         }
-        if (image.at<uchar>(top - 1) == 1) {
-            push_and_update_left(image, q, data, top - 1, value);
+        if (top.y > 0 && image.at<uchar>(top.x - 1) == 1) {
+            push_and_update_left(image, q, data, cv::Point2i(top.x - 1, top.y - 1), value);
         }
     } else {
-        if (top - 1 > -1 && image.at<uchar>(top - 1) == 1) {
-            push_and_update_left(image, q, data, top - 1, value);
+        if (top.y > 0 && image.at<uchar>(top.x - 1) == 1) {
+            push_and_update_left(image, q, data, cv::Point2i(top.x - 1, top.y - 1), value);
         }
     }
-    if (top + image.size().width < out) {
-        if (image.at<uchar>(top + image.size().width) == 1) {
-            push_and_update_down(image, q, data, top + image.size().width, value);
+    if (top.x + image.size().width < out) {
+        if (image.at<uchar>(top.x + image.size().width) == 1) {
+            push_and_update_down(image, q, data, cv::Point2i(top.x + image.size().width, top.y), value);
         }
-        if (image.at<uchar>(top + 1) == 1) {
-            push_and_update_right(image, q, data, top + 1, value);
+        if (top.y < image.size().width - 1 && image.at<uchar>(top.x + 1) == 1) {
+            push_and_update_right(image, q, data, cv::Point2i(top.x + 1, top.y + 1), value);
         }
     } else {
-        if (top + 1 < out && image.at<uchar>(top + 1) == 1) {
-            push_and_update_right(image, q, data, top + 1, value);
+        if (top.y < image.size().width - 1 && image.at<uchar>(top.x + 1) == 1) {
+            push_and_update_right(image, q, data, cv::Point2i(top.x + 1, top.y + 1), value);
         }
     }
 }
@@ -185,112 +189,105 @@ inline void bfs_step8(cv::Mat &image, std::queue<int> &q,
     }
 }
 
-inline void bfs_step8(cv::Mat &image, std::queue<int> &q,
+inline void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
                       ComponentData &data, const uchar &value, const int &out) {
     auto n = image.size().width;
-    int top = q.front();
+    auto top = q.front();
     q.pop();
-    if (top > n) {
-        if (image.at<uchar>(top - n - 1) == 1) {
-            push_and_update_up(image, q, data, top - n - 1, value);
-            int l = (top - 1) % n;
-            if (l < data.left) {
-                data.left = l;
+    if (top.x > n) {
+        if (top.y > 0) {
+            if (image.at<uchar>(top.x - n - 1) == 1) {
+                push_and_update_up(image, q, data, cv::Point2i(top.x - n - 1, top.y - 1), value);
+                if (top.y - 1 < data.left) {
+                    data.left = top.y - 1;
+                }
+            }
+            if (image.at<uchar>(top.x - 1) == 1) {
+                push_and_update_left(image, q, data, cv::Point(top.x - 1, top.y - 1), value);
             }
         }
-        if (image.at<uchar>(top - n) == 1) {
-            push_and_update_up(image, q, data, top - n, value);
+        if (image.at<uchar>(top.x - n) == 1) {
+            push_and_update_up(image, q, data, cv::Point2i(top.x - n, top.y), value);
         }
-        if (image.at<uchar>(top - n + 1) == 1) {
-            push_and_update_up(image, q, data, top - n + 1, value);
-            int l = (top + 1) % n;
-            if (l > data.right) {
-                data.right = l;
+        if (top.y < n - 1 && image.at<uchar>(top.x - n + 1) == 1) {
+            push_and_update_up(image, q, data, cv::Point(top.x - n + 1, top.y + 1), value);
+            if (top.y + 1 > data.right) {
+                data.right = top.y + 1;
             }
         }
-        if (image.at<uchar>(top - 1) == 1) {
-            push_and_update_left(image, q, data, top - 1, value);
+    } else if (top.x > n - 1) {
+        if (image.at<uchar>(top.x - n) == 1) {
+            push_and_update_up(image, q, data, cv::Point2i(top.x - n, top.y), value);
         }
-    } else if (top > n - 1) {
-        if (image.at<uchar>(top - n) == 1) {
-            push_and_update_up(image, q, data, top - n, value);
-        }
-        if (image.at<uchar>(top - n + 1) == 1) {
-            push_and_update_up(image, q, data, top - n + 1, value);
-            int l = (top + 1) % n;
-            if (l > data.right) {
-                data.right = l;
+        if (top.y < n - 1 && image.at<uchar>(top.x - n + 1) == 1) {
+            push_and_update_up(image, q, data, cv::Point(top.x - n + 1, top.y + 1), value);
+            if (top.y + 1 > data.right) {
+                data.right = top.y + 1;
             }
         }
-        if (image.at<uchar>(top - 1) == 1) {
-            push_and_update_left(image, q, data, top - 1, value);
+        if (top.y > 0 && image.at<uchar>(top.x - 1) == 1) {
+            push_and_update_left(image, q, data, cv::Point(top.x - 1, top.y - 1), value);
         }
-    } else if (top > n - 2) {
-        if (image.at<uchar>(top - n + 1) == 1) {
-            push_and_update_up(image, q, data, top - n + 1, value);
-            int l = (top + 1) % n;
-            if (l > data.right) {
-                data.right = l;
+    } else if (top.x > n - 2) {
+        if (top.y < n - 1 && image.at<uchar>(top.x - n + 1) == 1) {
+            push_and_update_up(image, q, data, cv::Point(top.x - n + 1, top.y + 1), value);
+            if (top.y + 1 > data.right) {
+                data.right = top.y + 1;
             }
         }
-        if (image.at<uchar>(top - 1) == 1) {
-            push_and_update_left(image, q, data, top - 1, value);
+        if (top.y > 0 && image.at<uchar>(top.x - 1) == 1) {
+            push_and_update_left(image, q, data, cv::Point(top.x - 1, top.y - 1), value);
         }
-    } else if (top > 0 && image.at<uchar>(top - 1) == 1) {
-        push_and_update_left(image, q, data, top - 1, value);
+    } else if (top.y > 0 && image.at<uchar>(top.x - 1) == 1) {
+        push_and_update_left(image, q, data, cv::Point(top.x - 1, top.y - 1), value);
     }
 
-    if (top + n + 1 < out) {
-        if (image.at<uchar>(top + n + 1) == 1) {
-            push_and_update_down(image, q, data, top + n + 1, value);
-            int l = (top + 1) % n;
-            if (l > data.right) {
-                data.right = l;
+    if (top.x + n + 1 < out) {
+        if (top.y < n - 1) {
+            if (image.at<uchar>(top.x + n + 1) == 1) {
+                push_and_update_down(image, q, data, cv::Point2i(top.x + n + 1, top.y + 1), value);
+                if (top.y + 1 > data.right) {
+                    data.right = top.y + 1;
+                }
+            }
+            if (image.at<uchar>(top.x + 1) == 1) {
+                push_and_update_right(image, q, data, cv::Point2i(top.x + 1, top.y + 1), value);
             }
         }
-        if (image.at<uchar>(top + n) == 1) {
-            push_and_update_down(image, q, data, top + n, value);
+        if (image.at<uchar>(top.x + n) == 1) {
+            push_and_update_down(image, q, data, cv::Point(top.x + n, top.y), value);
         }
-        if (image.at<uchar>(top + n - 1) == 1) {
-            push_and_update_down(image, q, data, top + n - 1, value);
-            int l = (top - 1) % n;
-            if (l < data.left) {
-                data.left = l;
+        if (top.y > 0 && image.at<uchar>(top.x + n - 1) == 1) {
+            push_and_update_down(image, q, data, cv::Point(top.x + n - 1, top.y - 1), value);
+            if (top.y - 1 < data.left) {
+                data.left = top.y - 1;
             }
-
         }
-        if (image.at<uchar>(top + 1) == 1) {
-            push_and_update_right(image, q, data, top + 1, value);
+    } else if (top.x + n < out) {
+        if (image.at<uchar>(top.x + n) == 1) {
+            push_and_update_down(image, q, data, cv::Point(top.x + n, top.y), value);
         }
-    } else if (top + n < out) {
-        if (image.at<uchar>(top + n) == 1) {
-            push_and_update_down(image, q, data, top + n, value);
-        }
-        if (image.at<uchar>(top + n - 1) == 1) {
-            push_and_update_down(image, q, data, top + n - 1, value);
-            int l = (top - 1) % n;
-            if (l < data.left) {
-                data.left = l;
+        if (top.y > 0 && image.at<uchar>(top.x + n - 1) == 1) {
+            push_and_update_down(image, q, data, cv::Point(top.x + n - 1, top.y - 1), value);
+            if (top.y - 1 < data.left) {
+                data.left = top.y - 1;
             }
-
         }
-        if (image.at<uchar>(top + 1) == 1) {
-            push_and_update_right(image, q, data, top + 1, value);
+        if (top.y < n - 1  && image.at<uchar>(top.x + 1) == 1) {
+            push_and_update_right(image, q, data, cv::Point2i(top.x + 1, top.y + 1), value);
         }
-    } else if (top + n - 1 < out) {
-        if (image.at<uchar>(top + n - 1) == 1) {
-            push_and_update_down(image, q, data, top + n - 1, value);
-            int l = (top - 1) % n;
-            if (l < data.left) {
-                data.left = l;
+    } else if (top.x + n - 1 < out) {
+        if (top.y > 0 && image.at<uchar>(top.x + n - 1) == 1) {
+            push_and_update_down(image, q, data, cv::Point(top.x + n - 1, top.y - 1), value);
+            if (top.y - 1 < data.left) {
+                data.left = top.y - 1;
             }
-
         }
-        if (image.at<uchar>(top + 1) == 1) {
-            push_and_update_right(image, q, data, top + 1, value);
+        if (top.y < n - 1  && image.at<uchar>(top.x + 1) == 1) {
+            push_and_update_right(image, q, data, cv::Point2i(top.x + 1, top.y + 1), value);
         }
-    } else if (top + 1 < out && image.at<uchar>(top + 1) == 1) {
-        push_and_update_right(image, q, data, top + 1, value);
+    } else if (top.y < n - 1  && image.at<uchar>(top.x + 1) == 1) {
+        push_and_update_right(image, q, data, cv::Point2i(top.x + 1, top.y + 1), value);
     }
 }
 
@@ -320,14 +317,14 @@ void relabel_last_component_bfs(cv::Mat &image, ComponentData &data,
 void one_component_at_a_time1d8(cv::Mat &image, std::deque<ComponentData> &data) {
     int out = image.size().width * image.size().height, n = image.size().width;
     data = {};
-    std::queue<int> q;
+    std::queue<cv::Point2i> q;
     int comp_start(0);
     uchar cur_number = 1;
     while (true) {
         find_start(image, comp_start, out);
         if (comp_start != out) {
             ++cur_number;
-            push_and_update(image, q, comp_start, cur_number);
+            push_and_update(image, q, cv::Point2i(comp_start, comp_start % n), cur_number);
         } else {
             break;
         }
@@ -339,9 +336,9 @@ void one_component_at_a_time1d8(cv::Mat &image, std::deque<ComponentData> &data)
         data.emplace_back(cur_data);
     }
     if (data.empty()) { return; }
-    for (int i = 0; i < data.size(); ++i) {
-        data[i].bottom /= n;
-        data[i].top /= n;
+    for (auto &i : data) {
+        i.bottom /= n;
+        i.top /= n;
     }
     relabel_last_component_bfs(image, data.back(), out, 8);
 }
@@ -349,14 +346,14 @@ void one_component_at_a_time1d8(cv::Mat &image, std::deque<ComponentData> &data)
 void one_component_at_a_time1d4(cv::Mat &image, std::deque<ComponentData> &data) {
     int out = image.size().width * image.size().height, n = image.size().width;
     data = {};
-    std::queue<int> q;
+    std::queue<cv::Point2i> q;
     int comp_start(0);
     uchar cur_number = 1;
     while (true) {
         find_start(image, comp_start, out);
         if (comp_start != out) {
             ++cur_number;
-            push_and_update(image, q, comp_start, cur_number);
+            push_and_update(image, q, cv::Point2i(comp_start, comp_start % n), cur_number);
         } else {
             break;
         }
@@ -368,9 +365,9 @@ void one_component_at_a_time1d4(cv::Mat &image, std::deque<ComponentData> &data)
         data.emplace_back(cur_data);
     }
     if (data.empty()) { return; }
-    for (int i = 0; i < data.size(); ++i) {
-        data[i].bottom /= n;
-        data[i].top /= n;
+    for (auto &i : data) {
+        i.bottom /= n;
+        i.top /= n;
     }
     relabel_last_component_bfs(image, data.back(), out, 4);
 }

@@ -2,7 +2,6 @@
 #define SRC_COMPONENT_DATA_H
 
 #include <opencv2/opencv.hpp>
-#include <utility>
 
 class ComponentData {
 public:

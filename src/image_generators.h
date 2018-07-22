@@ -4,7 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <random>
 
-const int HEIGHT = 1024, WIDTH = 576;
+constexpr int HEIGHT = 1024, WIDTH = 576;
 //constexpr int HEIGHT = 576, WIDTH = 1024;
 
 namespace gen {

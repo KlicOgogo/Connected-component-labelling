@@ -7,7 +7,8 @@
 #define SRC_ONE_COMPONENT_AT_A_TIME_H
 
 
-inline void find_unlabeled_component(cv::Mat &image, cv::Point2i &comp_start, const int &m, const int &n) {
+inline void find_unlabeled_component(cv::Mat &image, cv::Point2i &comp_start,
+                                     const int &m, const int &n) {
     while (comp_start.y != m && image.at<uchar>(comp_start.y, comp_start.x) != 1) {
         if (comp_start.x != n - 1) {
             ++comp_start.x;
@@ -18,18 +19,47 @@ inline void find_unlabeled_component(cv::Mat &image, cv::Point2i &comp_start, co
     }
 }
 
-inline void update_last_component(cv::Mat &image, std::deque<ComponentData> &data,
-                                  const uchar &cur_number, const int &m, const int &n) {
-    if (data.empty()) {
-        return;
+inline void push_and_update(cv::Mat &image, std::queue<cv::Point2i> &q,
+                            const int &x, const int &y, const uchar &value) {
+    q.push(cv::Point2i(x, y));
+    image.at<uchar>(y, x) = value;
+}
+
+inline void push_and_update_left(cv::Mat &image, std::queue<cv::Point2i> &q,
+                            ComponentData &cur_data, const int &x,
+                            const int &y, const uchar &value) {
+    push_and_update(image, q, x, y, value);
+    if (x < cur_data.border.x) {
+        cur_data.border.x = x;
+        ++cur_data.border.width;
     }
-    data.back().number = 1;
-    for (int i = data.back().border.y; i < data.back().border.y + data.back().border.height; ++i) {
-        for (int j = data.back().border.x; j < data.back().border.x + data.back().border.width; ++j) {
-            if (image.at<uchar>(i, j) == cur_number) {
-                image.at<uchar>(i, j) = 1;
-            }
-        }
+}
+
+inline void push_and_update_right(cv::Mat &image, std::queue<cv::Point2i> &q,
+                                 ComponentData &cur_data, const int &x,
+                                 const int &y, const uchar &value) {
+    push_and_update(image, q, x, y, value);
+    if (x > cur_data.border.x + cur_data.border.width - 1) {
+        ++cur_data.border.width;
+    }
+}
+
+inline void push_and_update_up(cv::Mat &image, std::queue<cv::Point2i> &q,
+                                 ComponentData &cur_data, const int &x,
+                                 const int &y, const uchar &value) {
+    push_and_update(image, q, x, y, value);
+    if (y < cur_data.border.y) {
+        cur_data.border.y = y;
+        ++cur_data.border.height;
+    }
+}
+
+inline void push_and_update_down(cv::Mat &image, std::queue<cv::Point2i> &q,
+                               ComponentData &cur_data, const int &x,
+                               const int &y, const uchar &value) {
+    push_and_update(image, q, x, y, value);
+    if (y > cur_data.border.y + cur_data.border.height - 1) {
+        ++cur_data.border.height;
     }
 }
 
@@ -57,6 +87,7 @@ inline void update_last_component_bfs4(cv::Mat &image, std::deque<ComponentData>
         if (top.x < n - 1 && image.at<uchar>(top.y, top.x + 1) == cur_number) {
             auto temp = top.x + 1;
             q.push(cv::Point2i(temp, top.y));image.at<uchar>(top.y, temp) = 1;
+            image.at<uchar>(top.y, temp) = 1;
 
         }
         if (top.y > 0 && image.at<uchar>(top.y - 1, top.x) == cur_number) {
@@ -144,6 +175,21 @@ inline void update_last_component_bfs(cv::Mat &image, std::deque<ComponentData> 
         update_last_component_bfs4(image, data, cur_number, m, n);
     } else {
         return;
+    }
+}
+
+inline void update_last_component_naive(cv::Mat &image, std::deque<ComponentData> &data,
+                                        const uchar &cur_number, const int &m, const int &n) {
+    if (data.empty()) {
+        return;
+    }
+    data.back().number = 1;
+    for (int i = data.back().border.y; i < data.back().border.y + data.back().border.height; ++i) {
+        for (int j = data.back().border.x; j < data.back().border.x + data.back().border.width; ++j) {
+            if (image.at<uchar>(i, j) == cur_number) {
+                image.at<uchar>(i, j) = 1;
+            }
+        }
     }
 }
 
@@ -256,7 +302,7 @@ void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
         }
         data.emplace_back(cur_data);
     }
-    //update_last_component(image, data, cur_number, m, n);
+    //update_last_component_naive(image, data, cur_number, m, n);
     update_last_component_bfs(image, data, cur_number, m, n, 8);
 }
 
@@ -318,7 +364,7 @@ void one_component_at_a_time4(cv::Mat &image,
         }
         data.emplace_back(cur_data);
     }
-    //update_last_component(image, data, cur_number, m, n);
+    //update_last_component_naive(image, data, cur_number, m, n);
     update_last_component_bfs(image, data, cur_number, m, n, 4);
 }
 

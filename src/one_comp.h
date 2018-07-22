@@ -1,9 +1,9 @@
 #ifndef SRC_ONE_COMP_H
 #define SRC_ONE_COMP_H
 
-#include "c_data.h"
+#include "component_data.h"
 
-inline void find_unlabeled_component(cv::Mat &image, int &comp_start, const int &out) {
+inline void find_start(cv::Mat &image, int &comp_start, const int &out) {
     while (comp_start != out && image.at<uchar>(comp_start) != 1) {
         ++comp_start;
     }
@@ -16,7 +16,7 @@ inline void push_and_update(cv::Mat &image, std::queue<int> &q,
 }
 
 inline void push_and_update_left(cv::Mat &image, std::queue<int> &q,
-                                 CompData &data, const int &p, const uchar &value) {
+                                 ComponentData &data, const int &p, const uchar &value) {
     push_and_update(image, q, p, value);
     int l = p % image.size().width;
     if (l < data.left) {
@@ -25,7 +25,7 @@ inline void push_and_update_left(cv::Mat &image, std::queue<int> &q,
 }
 
 inline void push_and_update_right(cv::Mat &image, std::queue<int> &q,
-                                  CompData &data, const int &p, const uchar &value) {
+                                  ComponentData &data, const int &p, const uchar &value) {
     push_and_update(image, q, p, value);
     int l = p % image.size().width;
     if (l > data.right) {
@@ -35,7 +35,7 @@ inline void push_and_update_right(cv::Mat &image, std::queue<int> &q,
 }
 
 inline void push_and_update_up(cv::Mat &image, std::queue<int> &q,
-                               CompData &data, const int &p, const uchar &value) {
+                               ComponentData &data, const int &p, const uchar &value) {
     push_and_update(image, q, p, value);
     if (p < data.top) {
         data.top = p;
@@ -43,7 +43,7 @@ inline void push_and_update_up(cv::Mat &image, std::queue<int> &q,
 }
 
 inline void push_and_update_down(cv::Mat &image, std::queue<int> &q,
-                                 CompData &data, const int &p, const uchar &value) {
+                                 ComponentData &data, const int &p, const uchar &value) {
     push_and_update(image, q, p, value);
     if (p > data.bottom) {
         data.bottom = p;
@@ -51,7 +51,7 @@ inline void push_and_update_down(cv::Mat &image, std::queue<int> &q,
 }
 
 inline void bfs_step4(cv::Mat &image, std::queue<int> &q,
-                      CompData &data, const uchar &value, const int &out) {
+                      ComponentData &data, const uchar &value, const int &out) {
     int top = q.front();
     q.pop();
     if (top - image.size().width > -1) {
@@ -186,7 +186,7 @@ inline void bfs_step8(cv::Mat &image, std::queue<int> &q,
 }
 
 inline void bfs_step8(cv::Mat &image, std::queue<int> &q,
-                      CompData &data, const uchar &value, const int &out) {
+                      ComponentData &data, const uchar &value, const int &out) {
     auto n = image.size().width;
     int top = q.front();
     q.pop();
@@ -294,7 +294,7 @@ inline void bfs_step8(cv::Mat &image, std::queue<int> &q,
     }
 }
 
-void relabel_last_component_bfs(cv::Mat &image, CompData &data,
+void relabel_last_component_bfs(cv::Mat &image, ComponentData &data,
                                 const int &out, int connectivity = 8) {
     uchar cur_number = data.number;
     data.number = 1;
@@ -317,7 +317,7 @@ void relabel_last_component_bfs(cv::Mat &image, CompData &data,
     }
 }
 
-inline void relabel_last_component_naive(cv::Mat &image, CompData &data) {
+inline void relabel_last_component_naive1d(cv::Mat &image, ComponentData &data) {
     uchar cur_number = data.number;
     data.number = 1;
     for (int i = data.top - (data.top % image.size().width) + data.left;
@@ -328,21 +328,21 @@ inline void relabel_last_component_naive(cv::Mat &image, CompData &data) {
     }
 }
 
-void one_component_at_a_time8(cv::Mat &image, std::deque<CompData> &data) {
+void one_component_at_a_time1d8(cv::Mat &image, std::deque<ComponentData> &data) {
     int out = image.size().width * image.size().height;
     data = {};
     std::queue<int> q;
     int comp_start(0);
     uchar cur_number = 1;
     while (true) {
-        find_unlabeled_component(image, comp_start, out);
+        find_start(image, comp_start, out);
         if (comp_start != out) {
             ++cur_number;
             push_and_update(image, q, comp_start, cur_number);
         } else {
             break;
         }
-        CompData cur_data(comp_start, comp_start,
+        ComponentData cur_data(comp_start, comp_start,
                                comp_start % image.size().width,
                                comp_start % image.size().width, cur_number);
         while (!q.empty()) {
@@ -354,21 +354,21 @@ void one_component_at_a_time8(cv::Mat &image, std::deque<CompData> &data) {
     relabel_last_component_bfs(image, data.back(), out, 8);
 }
 
-void one_component_at_a_time4(cv::Mat &image, std::deque<CompData> &data) {
+void one_component_at_a_time1d4(cv::Mat &image, std::deque<ComponentData> &data) {
     int out = image.size().width * image.size().height;
     data = {};
     std::queue<int> q;
     int comp_start(0);
     uchar cur_number = 1;
     while (true) {
-        find_unlabeled_component(image, comp_start, out);
+        find_start(image, comp_start, out);
         if (comp_start != out) {
             ++cur_number;
             push_and_update(image, q, comp_start, cur_number);
         } else {
             break;
         }
-        CompData cur_data(comp_start, comp_start,
+        ComponentData cur_data(comp_start, comp_start,
                           comp_start % image.size().width,
                           comp_start % image.size().width, cur_number);
         while (!q.empty()) {
@@ -380,12 +380,12 @@ void one_component_at_a_time4(cv::Mat &image, std::deque<CompData> &data) {
     relabel_last_component_bfs(image, data.back(), out, 4);
 }
 
-void one_component_at_a_time(cv::Mat &image, std::deque<CompData> &data,
+void one_component_at_a_time1d(cv::Mat &image, std::deque<ComponentData> &data,
                              int connectivity = 8) {
     if (connectivity == 8) {
-        one_component_at_a_time8(image, data);
+        one_component_at_a_time1d8(image, data);
     } else if (connectivity == 4) {
-        one_component_at_a_time4(image, data);
+        one_component_at_a_time1d4(image, data);
     } else {
         return;
     }

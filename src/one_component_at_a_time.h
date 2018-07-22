@@ -6,7 +6,7 @@
 #ifndef SRC_ONE_COMPONENT_AT_A_TIME_H
 #define SRC_ONE_COMPONENT_AT_A_TIME_H
 
-inline void find_unlabeled_component(cv::Mat &image, cv::Point2i &comp_start) {
+inline void find_start(cv::Mat &image, cv::Point2i &comp_start) {
     while (comp_start.y != image.size().height &&
            image.at<uchar>(comp_start.y, comp_start.x) != 1) {
         if (comp_start.x != image.size().width - 1) {
@@ -28,9 +28,8 @@ inline void push_and_update_left(cv::Mat &image, std::queue<cv::Point2i> &q,
                             ComponentData &cur_data, const int &x,
                             const int &y, const uchar &value) {
     push_and_update(image, q, x, y, value);
-    if (x < cur_data.border.x) {
-        cur_data.border.x = x;
-        ++cur_data.border.width;
+    if (x < cur_data.left) {
+        --cur_data.left;
     }
 }
 
@@ -38,8 +37,8 @@ inline void push_and_update_right(cv::Mat &image, std::queue<cv::Point2i> &q,
                                  ComponentData &cur_data, const int &x,
                                  const int &y, const uchar &value) {
     push_and_update(image, q, x, y, value);
-    if (x > cur_data.border.x + cur_data.border.width - 1) {
-        ++cur_data.border.width;
+    if (x > cur_data.right) {
+        ++cur_data.right;
     }
 }
 
@@ -47,9 +46,8 @@ inline void push_and_update_up(cv::Mat &image, std::queue<cv::Point2i> &q,
                                  ComponentData &cur_data, const int &x,
                                  const int &y, const uchar &value) {
     push_and_update(image, q, x, y, value);
-    if (y < cur_data.border.y) {
-        cur_data.border.y = y;
-        ++cur_data.border.height;
+    if (y < cur_data.top) {
+        --cur_data.top;
     }
 }
 
@@ -57,8 +55,8 @@ inline void push_and_update_down(cv::Mat &image, std::queue<cv::Point2i> &q,
                                ComponentData &cur_data, const int &x,
                                const int &y, const uchar &value) {
     push_and_update(image, q, x, y, value);
-    if (y > cur_data.border.y + cur_data.border.height - 1) {
-        ++cur_data.border.height;
+    if (y > cur_data.bottom) {
+        ++cur_data.bottom;
     }
 }
 
@@ -150,15 +148,14 @@ inline void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
         if (top.y > 0 && image.at<uchar>(top.y - 1, temp_x) == 1) {
             auto temp_y = top.y - 1;
             push_and_update_left(image, q, data, temp_x, temp_y, value);
-            if (temp_y < data.border.y) {
-                data.border.y = temp_y;
-                ++data.border.height;
+            if (temp_y < data.top) {
+                --data.top;
             }
         }
         if (top.y < m - 1 && image.at<uchar>(top.y + 1, temp_x) == 1) {
             push_and_update_left(image, q, data, temp_x, top.y + 1, value);
-            if (top.y + 1 > data.border.y + data.border.height - 1) {
-                ++data.border.height;
+            if (top.y + 1 > data.bottom) {
+                ++data.bottom;
             }
         }
     }
@@ -169,14 +166,14 @@ inline void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
         }
         if (top.y > 0 && image.at<uchar>(top.y - 1, temp_x) == 1) {
             push_and_update_up(image, q, data, temp_x, top.y - 1, value);
-            if (temp_x > data.border.x + data.border.width - 1) {
-                ++data.border.width;
+            if (temp_x > data.right) {
+                ++data.right;
             }
         }
         if (top.y < m - 1 && image.at<uchar>(top.y + 1, temp_x) == 1) {
             push_and_update_right(image, q, data, temp_x, top.y + 1, value);
-            if (top.y + 1 > data.border.y + data.border.height - 1) {
-                ++data.border.height;
+            if (top.y + 1 > data.bottom) {
+                ++data.bottom;
             }
         }
     }
@@ -192,7 +189,7 @@ void relabel_last_component_bfs(cv::Mat &image, ComponentData &data,
                                 int connectivity = 8) {
     uchar cur_number = data.number;
     data.number = 1;
-    cv::Point2i comp_start(data.border.x, data.border.y);
+    cv::Point2i comp_start(data.left, data.top);
     while (image.at<uchar>(comp_start.y, comp_start.x) != cur_number) {
         ++comp_start.x;
     }
@@ -204,18 +201,18 @@ void relabel_last_component_bfs(cv::Mat &image, ComponentData &data,
         }
     } else if (connectivity == 4) {
         while (!q.empty()) {
-            bfs_step8(image, q, cur_number, data.number);
+            bfs_step4(image, q, cur_number, data.number);
         }
     } else {
         return;
     }
 }
 
-inline void relabel_last_component_naive(cv::Mat &image, ComponentData &data) {
+inline void relabel_last_component_naive2d(cv::Mat &image, ComponentData &data) {
     uchar cur_number = data.number;
     data.number = 1;
-    for (int i = data.border.y; i < data.border.y + data.border.height; ++i) {
-        for (int j = data.border.x; j < data.border.x + data.border.width; ++j) {
+    for (int i = data.top; i < data.bottom + 1; ++i) {
+        for (int j = data.left; j < data.right + 1; ++j) {
             if (image.at<uchar>(i, j) == cur_number) {
                 image.at<uchar>(i, j) = 1;
             }
@@ -223,20 +220,20 @@ inline void relabel_last_component_naive(cv::Mat &image, ComponentData &data) {
     }
 }
 
-void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
+void one_component_at_a_time2d8(cv::Mat &image, std::deque<ComponentData> &data) {
     data = {};
     std::queue<cv::Point2i> q;
     cv::Point2i comp_start(0, 0);
     uchar cur_number = 1;
     while (true) {
-        find_unlabeled_component(image, comp_start);
+        find_start(image, comp_start);
         if (comp_start.y != image.size().height) {
             ++cur_number;
             push_and_update(image, q, comp_start.x, comp_start.y, cur_number);
         } else {
             break;
         }
-        ComponentData cur_data(cv::Rect2i(comp_start.x, comp_start.y, 1, 1), cur_number);
+        ComponentData cur_data(comp_start.y, comp_start.y, comp_start.x, comp_start.x, cur_number);
         while (!q.empty()) {
             bfs_step8(image, q, cur_data, cur_number);
         }
@@ -246,20 +243,20 @@ void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
     relabel_last_component_bfs(image, data.back(), 8);
 }
 
-void one_component_at_a_time4(cv::Mat &image, std::deque<ComponentData> &data) {
+void one_component_at_a_time2d4(cv::Mat &image, std::deque<ComponentData> &data) {
     data = {};
     std::queue<cv::Point2i> q;
     cv::Point2i comp_start(0, 0);
     uchar cur_number = 1;
     while (true) {
-        find_unlabeled_component(image, comp_start);
+        find_start(image, comp_start);
         if (comp_start.y != image.size().height) {
             ++cur_number;
             push_and_update(image, q, comp_start.x, comp_start.y, cur_number);
         } else {
             break;
         }
-        ComponentData cur_data(cv::Rect2i(comp_start.x, comp_start.y, 1, 1), cur_number);
+        ComponentData cur_data(comp_start.y, comp_start.y, comp_start.x, comp_start.x, cur_number);
         while (!q.empty()) {
             bfs_step4(image, q, cur_data, cur_number);
         }
@@ -269,12 +266,12 @@ void one_component_at_a_time4(cv::Mat &image, std::deque<ComponentData> &data) {
     relabel_last_component_bfs(image, data.back(), 4);
 }
 
-void one_component_at_a_time(cv::Mat &image, std::deque<ComponentData> &data,
+void one_component_at_a_time2d(cv::Mat &image, std::deque<ComponentData> &data,
                              int connectivity=8) {
     if (connectivity == 8) {
-        one_component_at_a_time8(image, data);
+        one_component_at_a_time2d8(image, data);
     } else if (connectivity == 4) {
-        one_component_at_a_time4(image, data);
+        one_component_at_a_time2d4(image, data);
     } else {
         return;
     }

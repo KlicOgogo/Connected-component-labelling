@@ -63,126 +63,104 @@ inline void push_and_update_down(cv::Mat &image, std::queue<cv::Point2i> &q,
     }
 }
 
-inline void update_last_component_bfs4(cv::Mat &image, std::deque<ComponentData> &data,
-                                  const uchar &cur_number, const int &m, const int &n) {
+void relabel_last_component_bfs4(cv::Mat &image, std::deque<ComponentData> &data) {
     if (data.empty()) {
         return;
     }
+    uchar cur_number = data.back().number;
     data.back().number = 1;
     cv::Point2i comp_start(data.back().border.x, data.back().border.y);
     while (image.at<uchar>(comp_start.y, comp_start.x) != cur_number) {
         ++comp_start.x;
     }
-    image.at<uchar>(comp_start.y, comp_start.x) = 1;
     std::queue<cv::Point2i> q;
-    q.push(comp_start);
+    push_and_update(image, q, comp_start.x, comp_start.y, data.back().number);
     while (!q.empty()) {
         cv::Point2i top = q.front();
         q.pop();
         if (top.x > 0 && image.at<uchar>(top.y, top.x - 1) == cur_number) {
-            auto temp = top.x - 1;
-            q.push(cv::Point2i(temp, top.y));
-            image.at<uchar>(top.y, temp) = 1;
+            push_and_update(image, q, top.x - 1, top.y, data.back().number);
         }
-        if (top.x < n - 1 && image.at<uchar>(top.y, top.x + 1) == cur_number) {
-            auto temp = top.x + 1;
-            q.push(cv::Point2i(temp, top.y));image.at<uchar>(top.y, temp) = 1;
-            image.at<uchar>(top.y, temp) = 1;
-
+        if (top.x < image.size().width - 1 &&
+            image.at<uchar>(top.y, top.x + 1) == cur_number) {
+            push_and_update(image, q, top.x + 1, top.y, data.back().number);
         }
         if (top.y > 0 && image.at<uchar>(top.y - 1, top.x) == cur_number) {
-            auto temp = top.y - 1;
-            q.push(cv::Point2i(top.x, temp));
-            image.at<uchar>(temp, top.x) = 1;
+            push_and_update(image, q, top.x, top.y - 1, data.back().number);
         }
-        if (top.y < m - 1 && image.at<uchar>(top.y + 1, top.x) == cur_number) {
-            auto temp = top.y + 1;
-            q.push(cv::Point2i(top.x, temp));
-            image.at<uchar>(temp, top.x) = 1;
+        if (top.y < image.size().height - 1 &&
+            image.at<uchar>(top.y + 1, top.x) == cur_number) {
+            push_and_update(image, q, top.x, top.y + 1, data.back().number);
         }
     }
 }
 
-inline void update_last_component_bfs8(cv::Mat &image, std::deque<ComponentData> &data,
-                                       const uchar &cur_number, const int &m, const int &n) {
+void relabel_last_component_bfs8(cv::Mat &image, std::deque<ComponentData> &data) {
     if (data.empty()) {
         return;
     }
+    auto m = image.size().height;
+    auto n = image.size().width;
+    uchar cur_number = data.back().number;
     data.back().number = 1;
     cv::Point2i comp_start(data.back().border.x, data.back().border.y);
     while (image.at<uchar>(comp_start.y, comp_start.x) != cur_number) {
         ++comp_start.x;
     }
-    image.at<uchar>(comp_start.y, comp_start.x) = 1;
     std::queue<cv::Point2i> q;
-    q.push(comp_start);
+    push_and_update(image, q, comp_start.x, comp_start.y, data.back().number);
     while (!q.empty()) {
         cv::Point2i top = q.front();
         q.pop();
         if (top.x > 0) {
             auto temp_x = top.x - 1;
             if (image.at<uchar>(top.y, temp_x) == cur_number) {
-                q.push(cv::Point2i(temp_x, top.y));
-                image.at<uchar>(top.y, temp_x) = 1;
+                push_and_update(image, q, temp_x, top.y, data.back().number);
             }
             if (top.y > 0 && image.at<uchar>(top.y - 1, temp_x) == cur_number) {
-                auto temp_y = top.y - 1;
-                q.push(cv::Point2i(temp_x, temp_y));
-                image.at<uchar>(temp_y, temp_x) = 1;
+                push_and_update(image, q, temp_x, top.y - 1, data.back().number);
             }
             if (top.y < m - 1 && image.at<uchar>(top.y + 1, temp_x) == cur_number) {
-                auto temp_y = top.y + 1;
-                q.push(cv::Point2i(temp_x, temp_y));
-                image.at<uchar>(temp_y, temp_x) = 1;
+                push_and_update(image, q, temp_x, top.y + 1, data.back().number);
             }
         }
         if (top.x < n - 1) {
             auto temp_x = top.x + 1;
             if (image.at<uchar>(top.y, temp_x) == cur_number) {
-                q.push(cv::Point2i(temp_x, top.y));
-                image.at<uchar>(top.y, temp_x) = 1;
+                push_and_update(image, q, temp_x, top.y, data.back().number);
             }
             if (top.y > 0 && image.at<uchar>(top.y - 1, temp_x) == cur_number) {
-                auto temp_y = top.y - 1;
-                q.push(cv::Point2i(temp_x, temp_y));
-                image.at<uchar>(temp_y, temp_x) = 1;
+                push_and_update(image, q, temp_x, top.y - 1, data.back().number);
             }
             if (top.y < m - 1 && image.at<uchar>(top.y + 1, temp_x) == cur_number) {
-                auto temp_y = top.y + 1;
-                q.push(cv::Point2i(temp_x, temp_y));
-                image.at<uchar>(temp_y, temp_x) = 1;
+                push_and_update(image, q, temp_x, top.y + 1, data.back().number);
             }
         }
         if (top.y > 0 && image.at<uchar>(top.y - 1, top.x) == cur_number) {
-            auto temp = top.y - 1;
-            q.push(cv::Point2i(top.x, temp));
-            image.at<uchar>(temp, top.x) = 1;
+            push_and_update(image, q, top.x, top.y - 1, data.back().number);
         }
         if (top.y < m - 1 && image.at<uchar>(top.y + 1, top.x) == cur_number) {
-            auto temp = top.y + 1;
-            q.push(cv::Point2i(top.x, temp));
-            image.at<uchar>(temp, top.x) = 1;
+            push_and_update(image, q, top.x, top.y + 1, data.back().number);
         }
     }
 }
 
-inline void update_last_component_bfs(cv::Mat &image, std::deque<ComponentData> &data,
-                                      const uchar &cur_number, const int &m,
-                                      const int &n, int connectivity=8) {
+void relabel_last_component_bfs(cv::Mat &image, std::deque<ComponentData> &data,
+                                int connectivity = 8) {
     if (connectivity == 8) {
-        update_last_component_bfs8(image, data, cur_number, m, n);
+        relabel_last_component_bfs8(image, data);
     } else if (connectivity == 4) {
-        update_last_component_bfs4(image, data, cur_number, m, n);
+        relabel_last_component_bfs4(image, data);
     } else {
         return;
     }
 }
 
-inline void update_last_component_naive(cv::Mat &image, std::deque<ComponentData> &data,
-                                        const uchar &cur_number, const int &m, const int &n) {
+inline void relabel_last_component_naive(cv::Mat &image, std::deque<ComponentData> &data) {
     if (data.empty()) {
         return;
     }
+    uchar cur_number = data.back().number;
     data.back().number = 1;
     for (int i = data.back().border.y; i < data.back().border.y + data.back().border.height; ++i) {
         for (int j = data.back().border.x; j < data.back().border.x + data.back().border.width; ++j) {
@@ -302,8 +280,8 @@ void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
         }
         data.emplace_back(cur_data);
     }
-    //update_last_component_naive(image, data, cur_number, m, n);
-    update_last_component_bfs(image, data, cur_number, m, n, 8);
+    //relabel_last_component_naive(image, data);
+    relabel_last_component_bfs(image, data, 8);
 }
 
 void one_component_at_a_time4(cv::Mat &image,
@@ -364,8 +342,8 @@ void one_component_at_a_time4(cv::Mat &image,
         }
         data.emplace_back(cur_data);
     }
-    //update_last_component_naive(image, data, cur_number, m, n);
-    update_last_component_bfs(image, data, cur_number, m, n, 4);
+    //relabel_last_component_naive(image, data);
+    relabel_last_component_bfs(image, data, 4);
 }
 
 void one_component_at_a_time(cv::Mat &image,

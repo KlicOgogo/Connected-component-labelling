@@ -138,6 +138,57 @@ inline void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
     }
 }
 
+inline void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
+                      ComponentData &data, const uchar &value) {
+    auto m = image.size().height, n = image.size().width;
+    cv::Point2i top = q.front();
+    q.pop();
+    if (top.x > 0) {
+        auto temp_x = top.x - 1;
+        if (image.at<uchar>(top.y, temp_x) == 1) {
+            push_and_update_left(image, q, data, temp_x, top.y, value);
+        }
+        if (top.y > 0 && image.at<uchar>(top.y - 1, temp_x) == 1) {
+            auto temp_y = top.y - 1;
+            push_and_update_left(image, q, data, temp_x, temp_y, value);
+            if (temp_y < data.border.y) {
+                data.border.y = temp_y;
+                ++data.border.height;
+            }
+        }
+        if (top.y < m - 1 && image.at<uchar>(top.y + 1, temp_x) == 1) {
+            push_and_update_left(image, q, data, temp_x, top.y + 1, value);
+            if (top.y + 1 > data.border.y + data.border.height - 1) {
+                ++data.border.height;
+            }
+        }
+    }
+    if (top.x < n - 1) {
+        auto temp_x = top.x + 1;
+        if (image.at<uchar>(top.y, temp_x) == 1) {
+            push_and_update_right(image, q, data, temp_x, top.y, value);
+        }
+        if (top.y > 0 && image.at<uchar>(top.y - 1, temp_x) == 1) {
+            push_and_update_up(image, q, data, temp_x, top.y - 1, value);
+            if (temp_x > data.border.x + data.border.width - 1) {
+                ++data.border.width;
+            }
+        }
+        if (top.y < m - 1 && image.at<uchar>(top.y + 1, temp_x) == 1) {
+            push_and_update_right(image, q, data, temp_x, top.y + 1, value);
+            if (top.y + 1 > data.border.y + data.border.height - 1) {
+                ++data.border.height;
+            }
+        }
+    }
+    if (top.y > 0 && image.at<uchar>(top.y - 1, top.x) == 1) {
+        push_and_update_up(image, q, data, top.x, top.y - 1, value);
+    }
+    if (top.y < image.size().height - 1 && image.at<uchar>(top.y + 1, top.x) == 1) {
+        push_and_update_down(image, q, data, top.x, top.y + 1, value);
+    }
+}
+
 void relabel_last_component_bfs4(cv::Mat &image, ComponentData &data) {
     uchar cur_number = data.number;
     data.number = 1;
@@ -191,114 +242,24 @@ inline void relabel_last_component_naive(cv::Mat &image, ComponentData &data) {
 
 void one_component_at_a_time8(cv::Mat &image, std::deque<ComponentData> &data) {
     data = {};
-    auto m = image.size().height, n = image.size().width;
     std::queue<cv::Point2i> q;
     cv::Point2i comp_start(0, 0);
     uchar cur_number = 1;
     while (true) {
         find_unlabeled_component(image, comp_start);
-        if (comp_start.y != m) {
-            q.push(comp_start);
+        if (comp_start.y != image.size().height) {
             ++cur_number;
-            image.at<uchar>(comp_start.y, comp_start.x) = cur_number;
+            push_and_update(image, q, comp_start.x, comp_start.y, cur_number);
         } else {
             break;
         }
         ComponentData cur_data(cv::Rect2i(comp_start.x, comp_start.y, 1, 1), cur_number);
         while (!q.empty()) {
-            cv::Point2i top = q.front();
-            q.pop();
-            if (top.x > 0) {
-                auto temp_x = top.x - 1;
-                if (image.at<uchar>(top.y, temp_x) == 1) {
-                    q.push(cv::Point2i(temp_x, top.y));
-                    image.at<uchar>(top.y, temp_x) = cur_number;
-                    if (temp_x < cur_data.border.x) {
-                        cur_data.border.x = temp_x;
-                        ++cur_data.border.width;
-                    }
-                }
-                if (top.y > 0 && image.at<uchar>(top.y - 1, temp_x) == 1) {
-                    auto temp_y = top.y - 1;
-                    q.push(cv::Point2i(temp_x, temp_y));
-                    image.at<uchar>(temp_y, temp_x) = cur_number;
-                    if (temp_x < cur_data.border.x) {
-                        cur_data.border.x = temp_x;
-                        ++cur_data.border.width;
-                    }
-                    if (temp_y < cur_data.border.y) {
-                        cur_data.border.y = temp_y;
-                        ++cur_data.border.height;
-                    }
-                }
-                if (top.y < m - 1 && image.at<uchar>(top.y + 1, temp_x) == 1) {
-                    auto temp_y = top.y + 1;
-                    q.push(cv::Point2i(temp_x, temp_y));
-                    image.at<uchar>(temp_y, temp_x) = cur_number;
-                    if (temp_x < cur_data.border.x) {
-                        cur_data.border.x = temp_x;
-                        ++cur_data.border.width;
-                    }
-                    if (temp_y > cur_data.border.y + cur_data.border.height - 1) {
-                        ++cur_data.border.height;
-                    }
-                }
-            }
-            if (top.x < n - 1) {
-                auto temp_x = top.x + 1;
-                if (image.at<uchar>(top.y, temp_x) == 1) {
-                    q.push(cv::Point2i(temp_x, top.y));
-                    image.at<uchar>(top.y, temp_x) = cur_number;
-                    if (temp_x > cur_data.border.x + cur_data.border.width - 1) {
-                        ++cur_data.border.width;
-                    }
-                }
-                if (top.y > 0 && image.at<uchar>(top.y - 1, temp_x) == 1) {
-                    auto temp_y = top.y - 1;
-                    q.push(cv::Point2i(temp_x, temp_y));
-                    image.at<uchar>(temp_y, temp_x) = cur_number;
-                    if (temp_x > cur_data.border.x + cur_data.border.width - 1) {
-                        ++cur_data.border.width;
-                    }
-                    if (temp_y < cur_data.border.y) {
-                        cur_data.border.y = temp_y;
-                        ++cur_data.border.height;
-                    }
-                }
-                if (top.y < m - 1 && image.at<uchar>(top.y + 1, temp_x) == 1) {
-                    auto temp_y = top.y + 1;
-                    q.push(cv::Point2i(temp_x, temp_y));
-                    image.at<uchar>(temp_y, temp_x) = cur_number;
-                    if (temp_x > cur_data.border.x + cur_data.border.width - 1) {
-                        ++cur_data.border.width;
-                    }
-                    if (temp_y > cur_data.border.y + cur_data.border.height - 1) {
-                        ++cur_data.border.height;
-                    }
-                }
-            }
-            if (top.y > 0 && image.at<uchar>(top.y - 1, top.x) == 1) {
-                auto temp = top.y - 1;
-                q.push(cv::Point2i(top.x, temp));
-                image.at<uchar>(temp, top.x) = cur_number;
-                if (temp < cur_data.border.y) {
-                    cur_data.border.y = temp;
-                    ++cur_data.border.height;
-                }
-            }
-            if (top.y < m - 1 && image.at<uchar>(top.y + 1, top.x) == 1) {
-                auto temp = top.y + 1;
-                q.push(cv::Point2i(top.x, temp));
-                image.at<uchar>(temp, top.x) = cur_number;
-                if (temp > cur_data.border.y + cur_data.border.height - 1) {
-                    ++cur_data.border.height;
-                }
-            }
+            bfs_step8(image, q, cur_data, cur_number);
         }
         data.emplace_back(cur_data);
     }
     if (data.empty()) { return; }
-    //relabel_last_component_naive(image, data.back());
     relabel_last_component_bfs(image, data.back(), 8);
 }
 

@@ -317,19 +317,8 @@ void relabel_last_component_bfs(cv::Mat &image, ComponentData &data,
     }
 }
 
-inline void relabel_last_component_naive1d(cv::Mat &image, ComponentData &data) {
-    uchar cur_number = data.number;
-    data.number = 1;
-    for (int i = data.top - (data.top % image.size().width) + data.left;
-        i < data.bottom - (data.bottom % image.size().width) + data.right + 1; ++i) {
-        if (image.at<uchar>(i) == cur_number) {
-            image.at<uchar>(i) = 1;
-        }
-    }
-}
-
 void one_component_at_a_time1d8(cv::Mat &image, std::deque<ComponentData> &data) {
-    int out = image.size().width * image.size().height;
+    int out = image.size().width * image.size().height, n = image.size().width;
     data = {};
     std::queue<int> q;
     int comp_start(0);
@@ -342,20 +331,23 @@ void one_component_at_a_time1d8(cv::Mat &image, std::deque<ComponentData> &data)
         } else {
             break;
         }
-        ComponentData cur_data(comp_start, comp_start,
-                               comp_start % image.size().width,
-                               comp_start % image.size().width, cur_number);
+        ComponentData cur_data(comp_start, comp_start, comp_start % n,
+                               comp_start % n, cur_number);
         while (!q.empty()) {
             bfs_step8(image, q, cur_data, cur_number, out);
         }
         data.emplace_back(cur_data);
     }
     if (data.empty()) { return; }
+    for (int i = 0; i < data.size(); ++i) {
+        data[i].bottom /= n;
+        data[i].top /= n;
+    }
     relabel_last_component_bfs(image, data.back(), out, 8);
 }
 
 void one_component_at_a_time1d4(cv::Mat &image, std::deque<ComponentData> &data) {
-    int out = image.size().width * image.size().height;
+    int out = image.size().width * image.size().height, n = image.size().width;
     data = {};
     std::queue<int> q;
     int comp_start(0);
@@ -368,15 +360,18 @@ void one_component_at_a_time1d4(cv::Mat &image, std::deque<ComponentData> &data)
         } else {
             break;
         }
-        ComponentData cur_data(comp_start, comp_start,
-                          comp_start % image.size().width,
-                          comp_start % image.size().width, cur_number);
+        ComponentData cur_data(comp_start, comp_start, comp_start % n,
+                          comp_start % n, cur_number);
         while (!q.empty()) {
             bfs_step4(image, q, cur_data, cur_number, out);
         }
         data.emplace_back(cur_data);
     }
     if (data.empty()) { return; }
+    for (int i = 0; i < data.size(); ++i) {
+        data[i].bottom /= n;
+        data[i].top /= n;
+    }
     relabel_last_component_bfs(image, data.back(), out, 4);
 }
 

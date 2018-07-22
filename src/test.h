@@ -5,6 +5,8 @@
 #include "image_generators.h"
 #include <opencv2/opencv.hpp>
 #include "one_component_at_a_time.h"
+#include "component_data.h"
+#include "one_comp.h"
 #include <iostream>
 #include <vector>
 #include <deque>
@@ -37,7 +39,7 @@ std::vector<float> choose_p(int type = 0) {
 }
 
 namespace bmark {
-    constexpr int N_TIMES = 5;
+    constexpr int N_TIMES = 10;
 
     void test(int type = 0, int connectivity = 8) {
         std::vector<float> p_range = choose_p(type);
@@ -46,13 +48,14 @@ namespace bmark {
         for (int i = 0; i < N_TIMES; ++i) {
             for (const float &p : p_range) {
                 auto image = gen::square_comp_rand_size(p);
+                //auto image = gen::square_comp_max_area(p);
                 std::deque<ComponentData> data;
                 cv::Mat labels, centroids, stats;
                 auto opencv_start = steady_clock::now();
                 cv::connectedComponentsWithStats(image, labels, stats, centroids, connectivity);
                 opencv_sum_time += duration_cast<milliseconds>(steady_clock::now() - opencv_start);
                 auto my_start = steady_clock::now();
-                one_component_at_a_time(image, data, connectivity);
+                one_component_at_a_time2d(image, data, connectivity);
                 //cv::imshow("Labelled", image);
                 //cv::waitKey(0);
                 my_sum_time += duration_cast<milliseconds>(steady_clock::now() - my_start);
@@ -63,6 +66,33 @@ namespace bmark {
                   my_sum_time.count() / (20 * N_TIMES) << " milliseconds.\n";
         std::cout << "OpenCV algorithm:\naverage time = " <<
                   opencv_sum_time.count() / (20 * N_TIMES) << " milliseconds.\n\n";
+    }
+
+    void test_dim(int type = 0, int connectivity = 8) {
+        std::vector<float> p_range = choose_p(type);
+        std::vector<std::string> types = {"Dense", "Mean", "Sparse", "Median"};
+        std::chrono::milliseconds dim2_sum_time(0), dim1_sum_time(0);
+        for (int i = 0; i < N_TIMES; ++i) {
+            for (const float &p : p_range) {
+                auto image1 = gen::square_comp_max_area(p);
+                auto image2 = image1.clone();
+                std::deque<ComponentData> data1, data2;
+                cv::Mat labels, centroids, stats;
+                auto dim1_start = steady_clock::now();
+                one_component_at_a_time1d(image1, data1, connectivity);
+                dim1_sum_time += duration_cast<milliseconds>(steady_clock::now() - dim1_start);
+                auto dim2_start = steady_clock::now();
+                one_component_at_a_time2d(image2, data2, connectivity);
+                //cv::imshow("Labelled", image1);
+                //cv::waitKey(0);
+                dim2_sum_time += duration_cast<milliseconds>(steady_clock::now() - dim2_start);
+            }
+        }
+        std::cout << types[type] << " test with " << connectivity << "-connectivity:\n";
+        std::cout << "My one component at a time algorithm (2-dimensional):\naverage time = " <<
+                  dim2_sum_time.count() / (20 * N_TIMES) << " milliseconds.\n";
+        std::cout << "My one component at a time algorithm (1-dimensional):\naverage time = " <<
+                  dim1_sum_time.count() / (20 * N_TIMES) << " milliseconds.\n\n";
     }
 }
 #endif //SRC_TEST_H

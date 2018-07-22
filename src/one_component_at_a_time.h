@@ -6,7 +6,6 @@
 #ifndef SRC_ONE_COMPONENT_AT_A_TIME_H
 #define SRC_ONE_COMPONENT_AT_A_TIME_H
 
-
 inline void find_unlabeled_component(cv::Mat &image, cv::Point2i &comp_start) {
     while (comp_start.y != image.size().height &&
            image.at<uchar>(comp_start.y, comp_start.x) != 1) {
@@ -189,40 +188,24 @@ inline void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
     }
 }
 
-void relabel_last_component_bfs4(cv::Mat &image, ComponentData &data) {
-    uchar cur_number = data.number;
-    data.number = 1;
-    cv::Point2i comp_start(data.border.x, data.border.y);
-    while (image.at<uchar>(comp_start.y, comp_start.x) != cur_number) {
-        ++comp_start.x;
-    }
-    std::queue<cv::Point2i> q;
-    push_and_update(image, q, comp_start.x, comp_start.y, data.number);
-    while (!q.empty()) {
-        bfs_step4(image, q, cur_number, data.number);
-    }
-}
-
-void relabel_last_component_bfs8(cv::Mat &image, ComponentData &data) {
-    uchar cur_number = data.number;
-    data.number = 1;
-    cv::Point2i comp_start(data.border.x, data.border.y);
-    while (image.at<uchar>(comp_start.y, comp_start.x) != cur_number) {
-        ++comp_start.x;
-    }
-    std::queue<cv::Point2i> q;
-    push_and_update(image, q, comp_start.x, comp_start.y, data.number);
-    while (!q.empty()) {
-        bfs_step8(image, q, cur_number, data.number);
-    }
-}
-
 void relabel_last_component_bfs(cv::Mat &image, ComponentData &data,
                                 int connectivity = 8) {
+    uchar cur_number = data.number;
+    data.number = 1;
+    cv::Point2i comp_start(data.border.x, data.border.y);
+    while (image.at<uchar>(comp_start.y, comp_start.x) != cur_number) {
+        ++comp_start.x;
+    }
+    std::queue<cv::Point2i> q;
+    push_and_update(image, q, comp_start.x, comp_start.y, data.number);
     if (connectivity == 8) {
-        relabel_last_component_bfs8(image, data);
+        while (!q.empty()) {
+            bfs_step8(image, q, cur_number, data.number);
+        }
     } else if (connectivity == 4) {
-        relabel_last_component_bfs4(image, data);
+        while (!q.empty()) {
+            bfs_step8(image, q, cur_number, data.number);
+        }
     } else {
         return;
     }

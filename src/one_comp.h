@@ -294,40 +294,24 @@ inline void bfs_step8(cv::Mat &image, std::queue<int> &q,
     }
 }
 
-void relabel_last_component_bfs4(cv::Mat &image, CompData &data, const int &out) {
-    uchar cur_number = data.number;
-    data.number = 1;
-    int comp_start(data.top - (data.top % image.size().width) + data.left);
-    while (image.at<uchar>(comp_start) != cur_number) {
-        ++comp_start;
-    }
-    std::queue<int> q;
-    push_and_update(image, q, comp_start, data.number);
-    while (!q.empty()) {
-        bfs_step4(image, q, cur_number, data.number, out);
-    }
-}
-
-void relabel_last_component_bfs8(cv::Mat &image, CompData &data, const int &out) {
-    uchar cur_number = data.number;
-    data.number = 1;
-    int comp_start(data.top - (data.top % image.size().width) + data.left);
-    while (image.at<uchar>(comp_start) != cur_number) {
-        ++comp_start;
-    }
-    std::queue<int> q;
-    push_and_update(image, q, comp_start, data.number);
-    while (!q.empty()) {
-        bfs_step8(image, q, cur_number, data.number, out);
-    }
-}
-
 void relabel_last_component_bfs(cv::Mat &image, CompData &data,
                                 const int &out, int connectivity = 8) {
+    uchar cur_number = data.number;
+    data.number = 1;
+    int comp_start(data.top - (data.top % image.size().width) + data.left);
+    while (image.at<uchar>(comp_start) != cur_number) {
+        ++comp_start;
+    }
+    std::queue<int> q;
+    push_and_update(image, q, comp_start, data.number);
     if (connectivity == 8) {
-        relabel_last_component_bfs8(image, data, out);
+        while (!q.empty()) {
+            bfs_step8(image, q, cur_number, data.number, out);
+        }
     } else if (connectivity == 4) {
-        relabel_last_component_bfs4(image, data, out);
+        while (!q.empty()) {
+            bfs_step4(image, q, cur_number, data.number, out);
+        }
     } else {
         return;
     }

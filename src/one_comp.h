@@ -1,18 +1,16 @@
 #ifndef SRC_ONE_COMP_H
 #define SRC_ONE_COMP_H
 
+#include <deque>
+#include <queue>
+#include <cstdint>
+#include <opencv2/opencv.hpp>
 #include "component_data.h"
 
 inline void find_start(cv::Mat &image, int &comp_start, const int &out) {
     while (comp_start != out && image.at<uchar>(comp_start) != 1) {
         ++comp_start;
     }
-}
-
-inline void push_and_update(cv::Mat &image, std::queue<int> &q,
-                            const int &p, const uchar &value) {
-    q.push(p);
-    image.at<uchar>(p) = value;
 }
 
 inline void push_and_update(cv::Mat &image, std::queue<cv::Point2i> &q,
@@ -54,7 +52,7 @@ inline void push_and_update_down(cv::Mat &image, std::queue<cv::Point2i> &q,
     }
 }
 
-inline void bfs_step4(cv::Mat &image, std::queue<cv::Point2i> &q,
+void bfs_step4(cv::Mat &image, std::queue<cv::Point2i> &q,
                       ComponentData &data, const uchar &value, const int &out) {
     auto top = q.front();
     q.pop();
@@ -84,112 +82,7 @@ inline void bfs_step4(cv::Mat &image, std::queue<cv::Point2i> &q,
     }
 }
 
-inline void bfs_step4(cv::Mat &image, std::queue<int> &q,
-                      const uchar &old_value, const uchar &new_value, const int &out) {
-    int n = image.size().width;
-    int top = q.front();
-    q.pop();
-    if (top - n > -1) {
-        if (image.at<uchar>(top - n) == old_value) {
-            push_and_update(image, q, top - n, new_value);
-        }
-        if (image.at<uchar>(top - 1) == old_value) {
-            push_and_update(image, q, top - 1, new_value);
-        }
-    } else {
-        if (top > 0 && image.at<uchar>(top - 1) == old_value) {
-            push_and_update(image, q, top - 1, new_value);
-        }
-    }
-    if (top + n < out) {
-        if (image.at<uchar>(top + n) == old_value) {
-            push_and_update(image, q, top + n, new_value);
-        }
-        if (image.at<uchar>(top + 1) == old_value) {
-            push_and_update(image, q, top + 1, new_value);
-        }
-    } else {
-        if (top + 1 < out && image.at<uchar>(top + 1) == old_value) {
-            push_and_update(image, q, top + 1, new_value);
-        }
-    }
-}
-
-inline void bfs_step8(cv::Mat &image, std::queue<int> &q,
-                      const uchar &old_value, const uchar &new_value, const int &out) {
-    auto n = image.size().width;
-    int top = q.front();
-    q.pop();
-    if (top > n) {
-        if (image.at<uchar>(top - n - 1) == old_value) {
-            push_and_update(image, q, top - n - 1, new_value);
-        }
-        if (image.at<uchar>(top - n) == old_value) {
-            push_and_update(image, q, top - n, new_value);
-        }
-        if (image.at<uchar>(top - n + 1) == old_value) {
-            push_and_update(image, q, top - n + 1, new_value);
-        }
-        if (image.at<uchar>(top - 1) == old_value) {
-            push_and_update(image, q, top - 1, new_value);
-        }
-    } else if (top > n - 1) {
-        if (image.at<uchar>(top - n) == old_value) {
-            push_and_update(image, q, top - n, new_value);
-        }
-        if (image.at<uchar>(top - n + 1) == old_value) {
-            push_and_update(image, q, top - n + 1, new_value);
-        }
-        if (image.at<uchar>(top - 1) == old_value) {
-            push_and_update(image, q, top - 1, new_value);
-        }
-    } else if (top > n - 2) {
-        if (image.at<uchar>(top - n + 1) == old_value) {
-            push_and_update(image, q, top - n + 1, new_value);
-        }
-        if (image.at<uchar>(top - 1) == old_value) {
-            push_and_update(image, q, top - 1, new_value);
-        }
-    } else if (top > 0 && image.at<uchar>(top - 1) == old_value) {
-        push_and_update(image, q, top - 1, new_value);
-    }
-
-    if (top + n + 1 < out) {
-        if (image.at<uchar>(top + n + 1) == old_value) {
-            push_and_update(image, q, top + n + 1, new_value);
-        }
-        if (image.at<uchar>(top + n) == old_value) {
-            push_and_update(image, q, top + n, new_value);
-        }
-        if (image.at<uchar>(top + n - 1) == old_value) {
-            push_and_update(image, q, top + n - 1, new_value);
-        }
-        if (image.at<uchar>(top + 1) == old_value) {
-            push_and_update(image, q, top + 1, new_value);
-        }
-    } else if (top + n < out) {
-        if (image.at<uchar>(top + n) == old_value) {
-            push_and_update(image, q, top + n, new_value);
-        }
-        if (image.at<uchar>(top + n - 1) == old_value) {
-            push_and_update(image, q, top + n - 1, new_value);
-        }
-        if (image.at<uchar>(top + 1) == old_value) {
-            push_and_update(image, q, top + 1, new_value);
-        }
-    } else if (top + n - 1 < out) {
-        if (image.at<uchar>(top + n - 1) == old_value) {
-            push_and_update(image, q, top + n - 1, new_value);
-        }
-        if (image.at<uchar>(top + 1) == old_value) {
-            push_and_update(image, q, top + 1, new_value);
-        }
-    } else if (top + 1 < out && image.at<uchar>(top + 1) == old_value) {
-        push_and_update(image, q, top + 1, new_value);
-    }
-}
-
-inline void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
+void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
                       ComponentData &data, const uchar &value, const int &out) {
     auto n = image.size().width;
     auto top = q.front();
@@ -291,30 +184,8 @@ inline void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
     }
 }
 
-void relabel_last_component_bfs(cv::Mat &image, ComponentData &data,
-                                const int &out, int connectivity = 8) {
-    uchar cur_number = data.number;
-    data.number = 1;
-    int comp_start(data.top - (data.top % image.size().width) + data.left);
-    while (image.at<uchar>(comp_start) != cur_number) {
-        ++comp_start;
-    }
-    std::queue<int> q;
-    push_and_update(image, q, comp_start, data.number);
-    if (connectivity == 8) {
-        while (!q.empty()) {
-            bfs_step8(image, q, cur_number, data.number, out);
-        }
-    } else if (connectivity == 4) {
-        while (!q.empty()) {
-            bfs_step4(image, q, cur_number, data.number, out);
-        }
-    } else {
-        return;
-    }
-}
-
-void one_component_at_a_time1d8(cv::Mat &image, std::deque<ComponentData> &data) {
+void one_component_at_a_time1d(cv::Mat &image, std::deque<ComponentData> &data,
+                             int connectivity = 8) {
     int out = image.size().width * image.size().height, n = image.size().width;
     data = {};
     std::queue<cv::Point2i> q;
@@ -330,8 +201,14 @@ void one_component_at_a_time1d8(cv::Mat &image, std::deque<ComponentData> &data)
         }
         ComponentData cur_data(comp_start, comp_start, comp_start % n,
                                comp_start % n, cur_number);
-        while (!q.empty()) {
-            bfs_step8(image, q, cur_data, cur_number, out);
+        if (connectivity == 4) {
+            while (!q.empty()) {
+                bfs_step4(image, q, cur_data, cur_number, out);
+            }
+        } else if (connectivity == 8) {
+            while (!q.empty()) {
+                bfs_step8(image, q, cur_data, cur_number, out);
+            }
         }
         data.emplace_back(cur_data);
     }
@@ -340,46 +217,6 @@ void one_component_at_a_time1d8(cv::Mat &image, std::deque<ComponentData> &data)
         i.bottom /= n;
         i.top /= n;
     }
-    relabel_last_component_bfs(image, data.back(), out, 8);
 }
 
-void one_component_at_a_time1d4(cv::Mat &image, std::deque<ComponentData> &data) {
-    int out = image.size().width * image.size().height, n = image.size().width;
-    data = {};
-    std::queue<cv::Point2i> q;
-    int comp_start(0);
-    uchar cur_number = 1;
-    while (true) {
-        find_start(image, comp_start, out);
-        if (comp_start != out) {
-            ++cur_number;
-            push_and_update(image, q, cv::Point2i(comp_start, comp_start % n), cur_number);
-        } else {
-            break;
-        }
-        ComponentData cur_data(comp_start, comp_start, comp_start % n,
-                          comp_start % n, cur_number);
-        while (!q.empty()) {
-            bfs_step4(image, q, cur_data, cur_number, out);
-        }
-        data.emplace_back(cur_data);
-    }
-    if (data.empty()) { return; }
-    for (auto &i : data) {
-        i.bottom /= n;
-        i.top /= n;
-    }
-    relabel_last_component_bfs(image, data.back(), out, 4);
-}
-
-void one_component_at_a_time1d(cv::Mat &image, std::deque<ComponentData> &data,
-                             int connectivity = 8) {
-    if (connectivity == 8) {
-        one_component_at_a_time1d8(image, data);
-    } else if (connectivity == 4) {
-        one_component_at_a_time1d4(image, data);
-    } else {
-        return;
-    }
-}
 #endif //SRC_ONE_COMP_H

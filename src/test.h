@@ -2,14 +2,13 @@
 #define SRC_TEST_H
 
 #include <chrono>
-#include "image_generators.h"
+#include <iostream>
+#include <deque>
 #include <opencv2/opencv.hpp>
+#include "image_generators.h"
 #include "one_component_at_a_time.h"
 #include "component_data.h"
 #include "one_comp.h"
-#include <iostream>
-#include <vector>
-#include <deque>
 
 using namespace std::chrono;
 
@@ -19,19 +18,19 @@ using namespace std::chrono;
  * type = 2 - generate matrices with ~2 components
  * type = 3 - generate matrices with ~10 components
  */
-std::vector<float> choose_p(int type = 0) {
-    std::vector<float> p_range;
+std::deque<float> choose_p(int type = 0) {
+    std::deque<float> p_range;
     if (type == 0) {
-        p_range = std::vector<float>(20, 0.9);
+        p_range = std::deque<float>(20, 0.9);
     } else if (type == 1) {
         p_range = {0.05, 0.1, 0.15, 0.2, 0.25,
                    0.3, 0.35, 0.4, 0.45, 0.5,
                    0.55, 0.6, 0.65, 0.7, 0.75,
                    0.8, 0.85, 0.9, 0.95, 1.};
     } else if (type == 2) {
-        p_range = std::vector<float>(20, 0.1);
+        p_range = std::deque<float>(20, 0.1);
     } else if (type == 3) {
-        p_range = std::vector<float>(20, 0.5);
+        p_range = std::deque<float>(20, 0.5);
     } else {
         p_range = {};
     }
@@ -39,23 +38,23 @@ std::vector<float> choose_p(int type = 0) {
 }
 
 namespace bmark {
-    constexpr int N_TIMES = 10;
+    constexpr int N_TIMES = 5;
 
     void test(int type = 0, int connectivity = 8) {
-        std::vector<float> p_range = choose_p(type);
-        std::vector<std::string> types = {"Dense", "Mean", "Sparse", "Median"};
+        cv::setNumThreads(1);
+        auto p_range = choose_p(type);
+        std::deque<std::string> types = {"Dense", "Mean", "Sparse", "Median"};
         std::chrono::milliseconds my_sum_time(0), opencv_sum_time(0);
         for (int i = 0; i < N_TIMES; ++i) {
             for (const float &p : p_range) {
                 auto image = gen::square_comp_rand_size(p);
-                //auto image = gen::square_comp_max_area(p);
                 std::deque<ComponentData> data;
                 cv::Mat labels, centroids, stats;
                 auto opencv_start = steady_clock::now();
                 cv::connectedComponentsWithStats(image, labels, stats, centroids, connectivity);
                 opencv_sum_time += duration_cast<milliseconds>(steady_clock::now() - opencv_start);
                 auto my_start = steady_clock::now();
-                one_component_at_a_time2d(image, data, connectivity);
+                one_component_at_a_time1d(image, data, connectivity);
                 //cv::imshow("Labelled", image);
                 //cv::waitKey(0);
                 my_sum_time += duration_cast<milliseconds>(steady_clock::now() - my_start);
@@ -66,15 +65,16 @@ namespace bmark {
                   my_sum_time.count() / (20 * N_TIMES) << " milliseconds.\n";
         std::cout << "OpenCV algorithm:\naverage time = " <<
                   opencv_sum_time.count() / (20 * N_TIMES) << " milliseconds.\n\n";
+        std::cout << cv::getNumThreads() << " " << cv::getNumberOfCPUs() << "\n\n";
     }
 
     void test_dim(int type = 0, int connectivity = 8) {
-        std::vector<float> p_range = choose_p(type);
-        std::vector<std::string> types = {"Dense", "Mean", "Sparse", "Median"};
+        auto p_range = choose_p(type);
+        std::deque<std::string> types = {"Dense", "Mean", "Sparse", "Median"};
         std::chrono::milliseconds dim2_sum_time(0), dim1_sum_time(0);
         for (int i = 0; i < N_TIMES; ++i) {
             for (const float &p : p_range) {
-                auto image1 = gen::square_comp_max_area(p);
+                auto image1 = gen::square_comp_rand_size(p);
                 auto image2 = image1.clone();
                 std::deque<ComponentData> data1, data2;
                 cv::Mat labels, centroids, stats;

@@ -3,7 +3,6 @@
 
 #include <deque>
 #include <queue>
-#include <cstdint>
 #include <opencv2/opencv.hpp>
 #include "component_data.h"
 
@@ -61,7 +60,7 @@ inline void push_and_update_down(cv::Mat &image, std::queue<cv::Point2i> &q,
     }
 }
 
-inline void bfs_step4(cv::Mat &image, std::queue<cv::Point2i> &q,
+inline void bfs_step2d4(cv::Mat &image, std::queue<cv::Point2i> &q,
                       ComponentData &data, const uchar &value) {
     cv::Point2i top = q.front();
     q.pop();
@@ -79,7 +78,7 @@ inline void bfs_step4(cv::Mat &image, std::queue<cv::Point2i> &q,
     }
 }
 
-inline void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
+inline void bfs_step2d8(cv::Mat &image, std::queue<cv::Point2i> &q,
                       ComponentData &data, const uchar &value) {
     auto m = image.size().height, n = image.size().width;
     cv::Point2i top = q.front();
@@ -146,11 +145,11 @@ void one_component_at_a_time2d(cv::Mat &image, std::deque<ComponentData> &data,
         ComponentData cur_data(comp_start.y, comp_start.y, comp_start.x, comp_start.x, cur_number);
         if (connectivity == 8) {
             while (!q.empty()) {
-                bfs_step8(image, q, cur_data, cur_number);
+                bfs_step2d8(image, q, cur_data, cur_number);
             }
         } else if (connectivity == 4) {
             while (!q.empty()) {
-                bfs_step4(image, q, cur_data, cur_number);
+                bfs_step2d4(image, q, cur_data, cur_number);
             }
         }
         data.emplace_back(cur_data);

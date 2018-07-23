@@ -134,27 +134,24 @@ void one_component_at_a_time2d(cv::Mat &image, std::deque<ComponentData> &data,
     std::queue<cv::Point2i> q;
     cv::Point2i comp_start(0, 0);
     uchar cur_number = 1;
-    while (true) {
+    while (comp_start.y != image.size().height) {
         find_start(image, comp_start);
         if (comp_start.y != image.size().height) {
             ++cur_number;
             push_and_update(image, q, comp_start.x, comp_start.y, cur_number);
-        } else {
-            break;
-        }
-        ComponentData cur_data(comp_start.y, comp_start.y, comp_start.x, comp_start.x, cur_number);
-        if (connectivity == 8) {
-            while (!q.empty()) {
-                bfs_step2d8(image, q, cur_data, cur_number);
+            ComponentData cur_data(comp_start.y, comp_start.y, comp_start.x, comp_start.x, cur_number);
+            if (connectivity == 8) {
+                while (!q.empty()) {
+                    bfs_step2d8(image, q, cur_data, cur_number);
+                }
+            } else if (connectivity == 4) {
+                while (!q.empty()) {
+                    bfs_step2d4(image, q, cur_data, cur_number);
+                }
             }
-        } else if (connectivity == 4) {
-            while (!q.empty()) {
-                bfs_step2d4(image, q, cur_data, cur_number);
-            }
+            data.emplace_back(cur_data);
         }
-        data.emplace_back(cur_data);
     }
-    if (data.empty()) { return; }
 }
 
 #endif //SRC_ONE_COMPONENT_AT_A_TIME_H

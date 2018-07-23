@@ -195,30 +195,27 @@ void one_component_at_a_time1d(cv::Mat &image, std::deque<ComponentData> &data,
     std::queue<cv::Point2i> q;
     int comp_start(0);
     uchar cur_number = 1;
-    while (true) {
+    while (comp_start != out) {
         while (comp_start != out && image.at<uchar>(comp_start) != 1) {
             ++comp_start;
         }
         if (comp_start != out) {
             ++cur_number;
             push_and_update(image, q, cv::Point2i(comp_start, comp_start % n), cur_number);
-        } else {
-            break;
-        }
-        ComponentData cur_data(comp_start, comp_start, comp_start % n,
-                               comp_start % n, cur_number);
-        if (connectivity == 4) {
-            while (!q.empty()) {
-                bfs_step1d4(image, q, cur_data, cur_number, out);
+            ComponentData cur_data(comp_start, comp_start, comp_start % n,
+                                   comp_start % n, cur_number);
+            if (connectivity == 4) {
+                while (!q.empty()) {
+                    bfs_step1d4(image, q, cur_data, cur_number, out);
+                }
+            } else if (connectivity == 8) {
+                while (!q.empty()) {
+                    bfs_step1d8(image, q, cur_data, cur_number, out);
+                }
             }
-        } else if (connectivity == 8) {
-            while (!q.empty()) {
-                bfs_step1d8(image, q, cur_data, cur_number, out);
-            }
+            data.emplace_back(cur_data);
         }
-        data.emplace_back(cur_data);
     }
-    if (data.empty()) { return; }
     for (auto &i : data) {
         i.bottom /= n;
         i.top /= n;

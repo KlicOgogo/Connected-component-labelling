@@ -42,12 +42,13 @@ namespace bmark {
 
     void test(int type = 0, int connectivity = 8) {
         cv::setNumThreads(1);
+        cv::setUseOptimized(false);
         auto p_range = choose_p(type);
         std::deque<std::string> types = {"Dense", "Mean", "Sparse", "Median"};
         std::chrono::milliseconds my_sum_time(0), opencv_sum_time(0);
         for (int i = 0; i < N_TIMES; ++i) {
             for (const float &p : p_range) {
-                auto image = gen::square_comp_rand_size(p);
+                auto image = gen::rect_components(p, 1);
                 std::deque<ComponentData> data;
                 cv::Mat labels, centroids, stats;
                 auto opencv_start = steady_clock::now();
@@ -65,7 +66,6 @@ namespace bmark {
                   my_sum_time.count() / (20 * N_TIMES) << " milliseconds.\n";
         std::cout << "OpenCV algorithm:\naverage time = " <<
                   opencv_sum_time.count() / (20 * N_TIMES) << " milliseconds.\n\n";
-        std::cout << cv::getNumThreads() << " " << cv::getNumberOfCPUs() << "\n\n";
     }
 
     void test_dim(int type = 0, int connectivity = 8) {
@@ -74,7 +74,7 @@ namespace bmark {
         std::chrono::milliseconds dim2_sum_time(0), dim1_sum_time(0);
         for (int i = 0; i < N_TIMES; ++i) {
             for (const float &p : p_range) {
-                auto image1 = gen::square_comp_rand_size(p);
+                auto image1 = gen::rect_components(p, 1);
                 auto image2 = image1.clone();
                 std::deque<ComponentData> data1, data2;
                 cv::Mat labels, centroids, stats;

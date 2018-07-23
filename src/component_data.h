@@ -1,8 +1,6 @@
 #ifndef SRC_COMPONENT_DATA_H
 #define SRC_COMPONENT_DATA_H
 
-#include <opencv2/opencv.hpp>
-
 class ComponentData {
 public:
     int top{}, bottom{}, left{}, right{};

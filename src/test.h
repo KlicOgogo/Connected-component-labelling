@@ -35,6 +35,8 @@ using namespace std::chrono;
 constexpr int N_TIMES = 10;
 
 void test_func() noexcept {
+    cv::setNumThreads(1);
+    cv::setUseOptimized(false);
     std::deque<std::string> types = {"(x + y) % c < d", "((x + y) * x * y / (1 + x * x + y * y )) % C > d"};
     for (int connectivity = 8; connectivity > 3; connectivity -= 4) {
         for (int type = 0; type < 2; ++type) {

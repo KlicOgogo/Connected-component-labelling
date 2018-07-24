@@ -10,11 +10,13 @@ Image constraints: size - 1024x576, maximum of components - 20, maximum of compo
 Installing OpenCV: https://docs.opencv.org/2.4/doc/tutorials/introduction/linux_install/linux_install.html#linux-installation.
 
 To get the repository:
-```git clone https://github.com/KlicOgogo/Connected-component-labelling.git
+```
+git clone https://github.com/KlicOgogo/Connected-component-labelling.git
 ```
 
 To start the program open Terminal and run from downloaded repo:
-```bash compile.sh
+```
+bash compile.sh
 bash run.sh
 ```
 

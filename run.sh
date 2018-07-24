@@ -1,1 +1,1 @@
-./src/cmake-build-debug/app
+./src/.exe/app

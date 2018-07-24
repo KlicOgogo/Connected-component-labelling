@@ -47,33 +47,20 @@ inline void push_and_update_bottom_border(cv::Mat &image, std::queue<cv::Point2i
 
 inline void bfs_step1d4(cv::Mat &image, std::queue<cv::Point2i> &q,
                         ComponentData &data, const uchar &value, const int &out) noexcept {
-    auto cur = q.front();
+    cv::Point2i cur = q.front();
     q.pop();
-    if (cur.x > image.size().width - 1) {
-        if (image.at<uchar>(cur.x - image.size().width) == 1) {
-            push_and_update_top_border(image, q, data,
-                                       cv::Point2i(cur.x - image.size().width, cur.y), value);
-        }
-        if (cur.y > 0 && image.at<uchar>(cur.x - 1) == 1) {
-            push_and_update_left_border(image, q, data, cv::Point2i(cur.x - 1, cur.y - 1), value);
-        }
-    } else {
-        if (cur.y > 0 && image.at<uchar>(cur.x - 1) == 1) {
-            push_and_update_left_border(image, q, data, cv::Point2i(cur.x - 1, cur.y - 1), value);
-        }
+    auto n = image.size().width;
+    if (cur.y > 0 && image.at<uchar>(cur.x - 1) == 1) {
+        push_and_update_left_border(image, q, data, cv::Point2i(cur.x - 1, cur.y - 1), value);
     }
-    if (cur.x + image.size().width < out) {
-        if (image.at<uchar>(cur.x + image.size().width) == 1) {
-            push_and_update_bottom_border(image, q, data,
-                                          cv::Point2i(cur.x + image.size().width, cur.y), value);
-        }
-        if (cur.y < image.size().width - 1 && image.at<uchar>(cur.x + 1) == 1) {
-            push_and_update_right_border(image, q, data, cv::Point2i(cur.x + 1, cur.y + 1), value);
-        }
-    } else {
-        if (cur.y < image.size().width - 1 && image.at<uchar>(cur.x + 1) == 1) {
-            push_and_update_right_border(image, q, data, cv::Point2i(cur.x + 1, cur.y + 1), value);
-        }
+    if (cur.y < n - 1 && image.at<uchar>(cur.x + 1) == 1) {
+        push_and_update_right_border(image, q, data, cv::Point2i(cur.x + 1, cur.y + 1), value);
+    }
+    if (cur.x >= n && image.at<uchar>(cur.x - n) == 1) {
+        push_and_update_top_border(image, q, data, cv::Point2i(cur.x - n, cur.y), value);
+    }
+    if (cur.x + n < out && image.at<uchar>(cur.x + n) == 1) {
+        push_and_update_bottom_border(image, q, data, cv::Point2i(cur.x + n, cur.y), value);
     }
 }
 

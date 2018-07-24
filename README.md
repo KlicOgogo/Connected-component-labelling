@@ -20,4 +20,4 @@ bash compile.sh
 bash run.sh
 ```
 
-See ```image.generators.cpp``` to understand columns of console output.
+See ```image_generators.cpp``` to understand columns of console output.

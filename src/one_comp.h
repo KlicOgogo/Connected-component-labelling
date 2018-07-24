@@ -45,8 +45,8 @@ inline void push_and_update_bottom_border(cv::Mat &image, std::queue<cv::Point2i
     }
 }
 
-inline void bfs_step1d4(cv::Mat &image, std::queue<cv::Point2i> &q,
-                        ComponentData &data, const uchar &value, const int &out) noexcept {
+inline void bfs_step4(cv::Mat &image, std::queue<cv::Point2i> &q,
+                      ComponentData &data, const uchar &value, const int &out) noexcept {
     cv::Point2i cur = q.front();
     q.pop();
     auto n = image.size().width;
@@ -64,8 +64,8 @@ inline void bfs_step1d4(cv::Mat &image, std::queue<cv::Point2i> &q,
     }
 }
 
-inline void bfs_step1d8(cv::Mat &image, std::queue<cv::Point2i> &q,
-                        ComponentData &data, const uchar &value, const int &out) noexcept {
+inline void bfs_step8(cv::Mat &image, std::queue<cv::Point2i> &q,
+                      ComponentData &data, const uchar &value, const int &out) noexcept {
     auto cur = q.front();
     q.pop();
     auto n = image.size().width;
@@ -113,8 +113,8 @@ inline void bfs_step1d8(cv::Mat &image, std::queue<cv::Point2i> &q,
     }
 }
 
-void one_component_at_a_time1d(cv::Mat &image, std::deque<ComponentData> &data,
-                               int connectivity = 8) noexcept {
+void one_component_at_a_time(cv::Mat &image, std::deque<ComponentData> &data,
+                             int connectivity = 8) noexcept {
     int out = image.size().width * image.size().height, n = image.size().width;
     data = {};
     std::queue<cv::Point2i> q;
@@ -131,11 +131,11 @@ void one_component_at_a_time1d(cv::Mat &image, std::deque<ComponentData> &data,
                                    comp_start % n, cur_number);
             if (connectivity == 4) {
                 while (!q.empty()) {
-                    bfs_step1d4(image, q, cur_data, cur_number, out);
+                    bfs_step4(image, q, cur_data, cur_number, out);
                 }
             } else if (connectivity == 8) {
                 while (!q.empty()) {
-                    bfs_step1d8(image, q, cur_data, cur_number, out);
+                    bfs_step8(image, q, cur_data, cur_number, out);
                 }
             }
             data.emplace_back(cur_data);

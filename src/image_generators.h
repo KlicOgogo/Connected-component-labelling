@@ -49,7 +49,7 @@ void draw_rectangle(cv::Mat &image, const int &width, const int &height,
 
 
 namespace gen {
-    /* Function divides image into MAX_COMPONENTS equal(almost) parts
+    /* Function divides image into grid_param.x * grid_param.y equal(almost) parts
      * and generates a rectangle of some size (depends on max_size value) inside them with probability p.
      */
     cv::Mat rect_components_grid(double p = 0.5, cv::Point2i grid_param = cv::Point2i(5, 4),
@@ -229,7 +229,7 @@ namespace gen {
 
     /* Function generates an image using mapping from coordinates to bool.
      * type == 0 => (x + y) % c < d, where (y,x) - image pixel;
-     * type == 1 => ((x + y) * x * y / (1 + x * x + y * y )) % C < d, where (y,x) - image pixel;
+     * type == 1 => ((x + y) * x * y / (1 + x * x + y * y )) % C > d, where (y,x) - image pixel;
 
      */
     cv::Mat func_components(int type = 0, int height = HEIGHT, int width = WIDTH) {
@@ -239,9 +239,9 @@ namespace gen {
         std::default_random_engine gen(device());
         std::uniform_real_distribution<double> distr(0.0, 1.0);
         auto lambda0 = [](int x, int y, int d) { return (x + y) % C < d; };
-        auto lambda1 = [](int x, int y, int d) { return ((x + y) * x * y / (1 + x * x + y * y)) % C < d; };
+        auto lambda1 = [](int x, int y, int d) { return ((x + y) * x * y / (1 + x * x + y * y)) % C > d; };
         std::vector<bool (*)(int, int, int)> lambdas = {lambda0, lambda1};
-        int d = 54 - static_cast<int>(20 * distr(gen));
+        int d = 49 - static_cast<int>(20 * distr(gen));
         for (int i = 0; i < height; ++i) {
             for (int j = 0; j < width; ++j) {
                 if (lambdas[type](i, j, d)) {
@@ -255,20 +255,30 @@ namespace gen {
     cv::Mat by_fig_type(const std::string &fig_type, float p) {
         if (fig_type == "Grid rectangles") {
             return gen::rect_components_grid(p);
+        } else if (fig_type == "Grid big rectangles") {
+            return gen::rect_components_grid(p, cv::Point2i(2, 1));
         } else if (fig_type == "Random rectangles") {
             return gen::rect_components(p);
+        } else if (fig_type == "Grid big rhombuses") {
+            return gen::figure_components_grid(p, 0, cv::Point2i(2, 1));
         } else if (fig_type == "Grid rhombuses") {
             return gen::figure_components_grid(p, 0);
         } else if (fig_type == "Random rhombuses") {
             return gen::figure_components(p, 0);
+        } else if (fig_type == "Grid big triangles") {
+            return gen::figure_components_grid(p, 1, cv::Point2i(2, 1));
         } else if (fig_type == "Grid triangles") {
             return gen::figure_components_grid(p, 1);
         } else if (fig_type == "Random triangles") {
             return gen::figure_components(p, 1);
+        } else if (fig_type == "Grid big rect. triangles") {
+            return gen::figure_components_grid(p, 2, cv::Point2i(2, 1));
         } else if (fig_type == "Grid rect. triangles") {
             return gen::figure_components_grid(p, 2);
         } else if (fig_type == "Random rect. triangles") {
             return gen::figure_components(p, 2);
+        } else if (fig_type == "Grid big something") {
+            return gen::all_types_components_grid(p, cv::Point2i(2, 1));
         } else if (fig_type == "Grid something") {
             return gen::all_types_components_grid(p);
         } else if (fig_type == "Random something") {

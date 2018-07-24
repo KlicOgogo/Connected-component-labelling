@@ -12,4 +12,5 @@
 out/
 target/
 cmake-build-debug/
+.exe/
 .ipynb_checkpoints/

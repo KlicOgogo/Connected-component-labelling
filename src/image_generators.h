@@ -3,9 +3,9 @@
 
 #include <random>
 
-constexpr uchar VALUE = 1;
-constexpr int HEIGHT = 1024, WIDTH = 576, MAX_COMPONENTS = 20;
-//constexpr int HEIGHT = 576, WIDTH = 1024, MAX_COMPONENTS = 20;
+constexpr uchar VALUE = 100;
+//constexpr int HEIGHT = 1024, WIDTH = 576, MAX_COMPONENTS = 20;
+constexpr int HEIGHT = 576, WIDTH = 1024, MAX_COMPONENTS = 20;
 
 void draw_figure(cv::Mat &image, int type, const int &fig_size, 
 				 const cv::Point2i &start, uchar value) {
@@ -51,11 +51,8 @@ void draw_rectangle(cv::Mat &image, const int &width, const int &height,
 namespace gen {
     /* Function divides image into MAX_COMPONENTS equal(almost) parts
      * and generates a rectangle of some size (depends on max_size value) inside them with probability p.
-     * max_size == false - random size, smaller than part_size / sqrt(2);
-     * max_size == true - size equal to part_size size / sqrt(2);
      */
-    cv::Mat rect_components_grid(double p = 0.5, bool max_size = false,
-								 int height = HEIGHT, int width = WIDTH) {
+    cv::Mat rect_components_grid(double p = 0.5, int height = HEIGHT, int width = WIDTH) {
         cv::Mat image(cv::Mat::zeros(height, width, CV_8UC1));
         std::random_device device;
         std::default_random_engine gen(device());
@@ -69,6 +66,7 @@ namespace gen {
             for (int j = 0; j < 4; ++j) {
                 if (distr(gen) < p) {
                     int comp_width{}, comp_height{};
+                    bool max_size = distr(gen) < 0.5;
                     if (!max_size) {
                         comp_width = width_lb - 40 + static_cast<int>(41 * distr(gen));
                         comp_height = height_lb - 40 + static_cast<int>(41 * distr(gen));
@@ -113,25 +111,27 @@ namespace gen {
     }
 
 	/* Same idea but generating random figure from {rhombus, triangle, rectangular rectangle, rectangle} each time. */
-	cv::Mat all_types_components(double p = 0.5, int height = HEIGHT, int width = WIDTH) {
+	cv::Mat all_types_components_grid(double p = 0.5, int height = HEIGHT, int width = WIDTH) {
 		cv::Mat image(cv::Mat::zeros(height, width, CV_8UC1));
         std::random_device device;
         std::default_random_engine gen(device());
         std::uniform_real_distribution<double> distr(0.0, 1.0);
         const int HEIGHT_SM = height / 5, WIDTH_SM = width / 4;
+        auto width_lb = static_cast<int>(static_cast<double>(WIDTH_SM) / std::sqrt(2));
+        auto height_lb = static_cast<int>(static_cast<double>(HEIGHT_SM) / std::sqrt(2));
         int top = 0;
         for (int i = 0; i < 5; ++i) {
             int left = 0;
             for (int j = 0; j < 4; ++j) {
                 if (distr(gen) < p) {
-					auto cur_type = 4 * distr(gen);
+					auto cur_type = static_cast<int>(4 * distr(gen));
 					if (cur_type < 3) {
 						auto fig_size = static_cast<int>((std::min(HEIGHT_SM, WIDTH_SM) / 3 + 50 * distr(gen)));
 						cv::Point2i start(left + WIDTH_SM / 2, top + HEIGHT_SM / 2);
-						draw_figure(image, type, fig_size, start, VALUE);
+						draw_figure(image, cur_type, fig_size, start, VALUE);
 					} else {
 						int comp_width{}, comp_height{};
-						bool max_size = distr(gen) < 0.5 ? true : false;
+						bool max_size = distr(gen) < 0.5;
 						if (!max_size) {
 							comp_width = width_lb - 40 + static_cast<int>(41 * distr(gen));
 							comp_height = height_lb - 40 + static_cast<int>(41 * distr(gen));
@@ -151,10 +151,8 @@ namespace gen {
 	
 	/* Function tries (with probability p) to generate a rectangle of some size
      *(depends on max_size value) at random place MAX_COMPONENTS times.
-	 * max_size == false => random sizes, square less than square_of_image / 2 / MAX_COMPONENTS;
-     * max_size == true => square ~ square_of_image / 2 / MAX_COMPONENTS;
 	 */
-	cv::Mat rect_components(double p = 0.5, bool max_size = false, int height = HEIGHT, int width = WIDTH) {
+	cv::Mat rect_components(double p = 0.5, int height = HEIGHT, int width = WIDTH) {
 		cv::Mat image(cv::Mat::zeros(height, width, CV_8UC1));
         std::random_device device;
         std::default_random_engine gen(device());
@@ -167,6 +165,7 @@ namespace gen {
 				cv::Point2i start(static_cast<int>(width * distr(gen)), 
 								  static_cast<int>(height * distr(gen)));
 				int comp_width{}, comp_height{};
+                bool max_size = distr(gen) < 0.5;
 				if (!max_size) {
 					comp_width = width_lb - 40 + static_cast<int>(41 * distr(gen));
 					comp_height = height_lb - 40 + static_cast<int>(41 * distr(gen));
@@ -229,6 +228,7 @@ namespace gen {
      * type == 0 => (x + y) % c < d, where (y,x) - image pixel;
      * type == 1 => (x | y) % c < d, where (y,x) - image pixel;
      * type == 2 => (x ^ y) % c < d, where (y,x) - image pixel;
+     * type == 3 => ((x + y) * x * y / (1 + x * x + y * y )) % C < d, where (y,x) - image pixel;
      */
     cv::Mat func_components(int type = 0, int height = HEIGHT, int width = WIDTH) {
         cv::Mat image(cv::Mat::zeros(height, width, CV_8UC1));
@@ -250,6 +250,30 @@ namespace gen {
             }
         }
         return image;
+    }
+
+    cv::Mat by_fig_type(const std::string &fig_type, float p) {
+        if (fig_type == "Grid rectangles") {
+            return gen::rect_components_grid(p);
+        } else if (fig_type == "Random rectangles") {
+            return gen::rect_components(p);
+        } else if (fig_type == "Grid rhombuses") {
+            return gen::figure_components_grid(p, 0);
+        } else if (fig_type == "Random rhombuses") {
+            return gen::figure_components(p, 0);
+        } else if (fig_type == "Grid triangles") {
+            return gen::figure_components_grid(p, 1);
+        } else if (fig_type == "Random triangles") {
+            return gen::figure_components(p, 1);
+        } else if (fig_type == "Grid rect. triangles") {
+            return gen::figure_components_grid(p, 2);
+        } else if (fig_type == "Random rect. triangles") {
+            return gen::figure_components(p, 2);
+        } else if (fig_type == "Grid something") {
+            return gen::all_types_components_grid(p);
+        } else if (fig_type == "Random something") {
+            return gen::all_types_components(p);
+        }
     }
 }
 

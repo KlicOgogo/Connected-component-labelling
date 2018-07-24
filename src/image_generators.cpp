@@ -209,7 +209,7 @@ cv::Mat gen::func_components(int type, int height, int width) {
     auto lambda0 = [](int x, int y, int d) { return (x + y) % C < d; };
     auto lambda1 = [](int x, int y, int d) { return ((x + y) * x * y / (1 + x * x + y * y)) % C < d; };
     std::vector<bool (*)(int, int, int)> lambdas = {lambda0, lambda1};
-    int d = 39 - static_cast<int>(20 * distr(gen));
+    int d = 35 - static_cast<int>(20 * distr(gen));
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
             if (lambdas[type](i, j, d)) {
@@ -221,32 +221,33 @@ cv::Mat gen::func_components(int type, int height, int width) {
 }
 
 cv::Mat gen::by_fig_type(const std::string &fig_type, float p) {
+    cv::Point2i big_grid_param(2, 1);
     if (fig_type == "Grid rectangles") {
         return gen::rect_components_grid(p);
     } else if (fig_type == "Grid big rectangles") {
-        return gen::rect_components_grid(p, cv::Point2i(2, 1));
+        return gen::rect_components_grid(p, big_grid_param);
     } else if (fig_type == "Random rectangles") {
         return gen::rect_components(p);
     } else if (fig_type == "Grid big rhombuses") {
-        return gen::figure_components_grid(p, 0, cv::Point2i(2, 1));
+        return gen::figure_components_grid(p, 0, big_grid_param);
     } else if (fig_type == "Grid rhombuses") {
         return gen::figure_components_grid(p, 0);
     } else if (fig_type == "Random rhombuses") {
         return gen::figure_components(p, 0);
     } else if (fig_type == "Grid big triangles") {
-        return gen::figure_components_grid(p, 1, cv::Point2i(2, 1));
+        return gen::figure_components_grid(p, 1, big_grid_param);
     } else if (fig_type == "Grid triangles") {
         return gen::figure_components_grid(p, 1);
     } else if (fig_type == "Random triangles") {
         return gen::figure_components(p, 1);
     } else if (fig_type == "Grid big rect. triangles") {
-        return gen::figure_components_grid(p, 2, cv::Point2i(2, 1));
+        return gen::figure_components_grid(p, 2, big_grid_param);
     } else if (fig_type == "Grid rect. triangles") {
         return gen::figure_components_grid(p, 2);
     } else if (fig_type == "Random rect. triangles") {
         return gen::figure_components(p, 2);
     } else if (fig_type == "Grid big something") {
-        return gen::all_types_components_grid(p, cv::Point2i(2, 1));
+        return gen::all_types_components_grid(p, big_grid_param);
     } else if (fig_type == "Grid something") {
         return gen::all_types_components_grid(p);
     } else if (fig_type == "Random something") {

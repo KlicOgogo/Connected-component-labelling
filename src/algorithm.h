@@ -1,5 +1,5 @@
-#ifndef SRC_ONE_COMP_H
-#define SRC_ONE_COMP_H
+#ifndef SRC_ALGORITHM_H
+#define SRC_ALGORITHM_H
 
 #include <deque>
 #include <queue>
@@ -13,7 +13,8 @@ inline void push_and_update(cv::Mat &image, std::queue<cv::Point2i> &q,
 }
 
 inline void push_and_update_left_border(cv::Mat &image, std::queue<cv::Point2i> &q,
-                                        ComponentData &data, const cv::Point &p, const uchar &value) noexcept {
+                                        ComponentData &data, const cv::Point &p,
+                                        const uchar &value) noexcept {
     push_and_update(image, q, p, value);
     if (p.y < data.left) {
         data.left = p.y;
@@ -21,7 +22,8 @@ inline void push_and_update_left_border(cv::Mat &image, std::queue<cv::Point2i> 
 }
 
 inline void push_and_update_right_border(cv::Mat &image, std::queue<cv::Point2i> &q,
-                                         ComponentData &data, const cv::Point2i &p, const uchar &value) noexcept {
+                                         ComponentData &data, const cv::Point2i &p,
+                                         const uchar &value) noexcept {
     push_and_update(image, q, p, value);
     if (p.y > data.right) {
         data.right = p.y;
@@ -30,7 +32,8 @@ inline void push_and_update_right_border(cv::Mat &image, std::queue<cv::Point2i>
 }
 
 inline void push_and_update_top_border(cv::Mat &image, std::queue<cv::Point2i> &q,
-                                       ComponentData &data, const cv::Point2i &p, const uchar &value) noexcept {
+                                       ComponentData &data, const cv::Point2i &p,
+                                       const uchar &value) noexcept {
     push_and_update(image, q, p, value);
     if (p.x < data.top) {
         data.top = p.x;
@@ -38,7 +41,8 @@ inline void push_and_update_top_border(cv::Mat &image, std::queue<cv::Point2i> &
 }
 
 inline void push_and_update_bottom_border(cv::Mat &image, std::queue<cv::Point2i> &q,
-                                          ComponentData &data, const cv::Point2i &p, const uchar &value) noexcept {
+                                          ComponentData &data, const cv::Point2i &p,
+                                          const uchar &value) noexcept {
     push_and_update(image, q, p, value);
     if (p.x > data.bottom) {
         data.bottom = p.x;
@@ -147,4 +151,4 @@ void one_component_at_a_time(cv::Mat &image, std::deque<ComponentData> &data,
     }
 }
 
-#endif //SRC_ONE_COMP_H
+#endif //SRC_ALGORITHM_H
